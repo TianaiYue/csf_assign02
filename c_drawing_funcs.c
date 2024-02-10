@@ -172,6 +172,16 @@ void draw_circle(struct Image *img,
                  int32_t x, int32_t y, int32_t r,
                  uint32_t color) {
   // TODO: implement
+  if (r <= 0) {
+    return;
+  }
+  for (int32_t i = y - r; i <= y + r; i++) {
+    for (int32_t j = x - r; j <= x + r; j++) {
+      if (square_dist(j, i, x, y) <= (int64_t)r * r) {
+        draw_pixel(img, j, i, color);
+      }
+    }
+  }
 }
 
 //
@@ -193,6 +203,27 @@ void draw_tile(struct Image *img,
                struct Image *tilemap,
                const struct Rect *tile) {
  // TODO: implement
+ // check if tile rectangle is not entirely within the bounds of tilemap
+  if (tile->x < 0 || tile->y < 0 || 
+      tile->x + tile->width > tilemap->width || 
+      tile->y + tile->height > tilemap->height) {
+    return;
+  }
+  
+  for (int32_t i = 0; i < tile->height; i++) {
+    for (int32_t j = 0; j < tile->width; j++) {
+      int32_t source_x = tile->x + j;
+      int32_t source_y = tile->y + i;
+      int32_t dest_x = x + j;
+      int32_t dest_y = y + i;
+      //check if the destination pixel is within the bounds
+      if (in_bounds(img, dest_x, dest_y)) {
+        uint32_t source_index = compute_index(tilemap, source_x, source_y);
+        uint32_t dest_index = compute_index(img, dest_x, dest_y);
+        img->data[dest_index] = tilemap->data[source_index];
+      }
+    }
+  }
 }
 
 //
@@ -215,4 +246,31 @@ void draw_sprite(struct Image *img,
                  struct Image *spritemap,
                  const struct Rect *sprite) {
   // TODO: implement
+  // check is sprite is not entirely within the bounds of the spritemap
+  if (sprite->x < 0 || sprite->y < 0 || 
+      sprite->x + sprite->width > spritemap->width || 
+      sprite->y + sprite->height > spritemap->height) {
+    return;
+  }
+
+  for (int32_t i = 0; i < sprite->height; i++) {
+    for (int32_t j = 0; j < sprite->width; j++) {
+      int32_t source_x = sprite->x + j;
+      int32_t source_y = sprite->y + i;
+      int32_t dest_x = x + j;
+      int32_t dest_y = y + i;
+      //ch
+      if (in_bounds(img, dest_x, dest_y)) {
+        uint32_t source_index = compute_index(spritemap, source_x, source_y);
+        uint32_t dest_index = compute_index(img, dest_x, dest_y);
+        uint32_t source_color = spritemap->data[source_index];
+
+        if (get_a(source_color) > 0) {
+          uint32_t dest_color = img->data[dest_index];
+          uint32_t blended_color = blend_colors(source_color, dest_color);
+          img->data[dest_index] = blended_color;
+        }
+      }
+    }
+  }
 }
