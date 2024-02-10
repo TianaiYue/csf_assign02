@@ -124,6 +124,10 @@ int64_t square_dist(int64_t x1, int64_t y1, int64_t x2, int64_t y2) {
 //
 void draw_pixel(struct Image *img, int32_t x, int32_t y, uint32_t color) {
   // TODO: implement
+  if (in_bounds(img, x, y)) {
+    uint32_t index = compute_index(img, x, y);
+    set_pixel(img, index, color);
+  }
 }
 
 //
@@ -140,6 +144,17 @@ void draw_rect(struct Image *img,
                const struct Rect *rect,
                uint32_t color) {
   // TODO: implement
+  int32_t x_start = clamp(rect->x, 0, img->width - 1);
+  int32_t y_start = clamp(rect->y, 0, img->height - 1);
+  
+  int32_t x_end = clamp(rect->x + rect->width, 0, img->width);
+  int32_t y_end = clamp(rect->y + rect->height, 0, img->height);
+
+  for (int32_t y = y_start; y < y_end; y++) {
+    for (int32_t x = x_start; x < x_end; x++) {
+        draw_pixel(img, x, y, color);
+    }
+  }
 }
 
 //
