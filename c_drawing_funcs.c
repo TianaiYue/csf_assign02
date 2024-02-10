@@ -259,12 +259,12 @@ void draw_sprite(struct Image *img,
       int32_t source_y = sprite->y + i;
       int32_t dest_x = x + j;
       int32_t dest_y = y + i;
-      //ch
+      //check if the destination pixel is within the bounds
       if (in_bounds(img, dest_x, dest_y)) {
         uint32_t source_index = compute_index(spritemap, source_x, source_y);
         uint32_t dest_index = compute_index(img, dest_x, dest_y);
         uint32_t source_color = spritemap->data[source_index];
-
+        //check if source pixel is transparent
         if (get_a(source_color) > 0) {
           uint32_t dest_color = img->data[dest_index];
           uint32_t blended_color = blend_colors(source_color, dest_color);
