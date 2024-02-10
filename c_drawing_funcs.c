@@ -11,6 +11,90 @@
 
 // TODO: implement helper functions
 
+// Checks x and y coordinates to determine whether they 
+// are in bounds in the specified image
+int32_t in_bounds(struct Image *img, int32_t x, int32_t y) {
+  if (x >= 0 && x < img->width && y >= 0 && y < img->height) {
+    return 1;
+  } else {
+    return 0;
+  }
+}
+
+// computes the index of a pixel in an image’s data array 
+// given its x and y coordinates
+uint32_t compute_index(struct Image *img, int32_t x, int32_t y) {
+  if (in_bounds(img, x, y)) {
+    return (uint32_t)(y * img->width + x);
+  }
+  return 0;
+}
+
+// Constrains a value so that it is greater than or equal 
+// to min and less than or equal to max
+int32_t clamp(int32_t val, int32_t min, int32_t max) {\
+  if (val < min) {
+    return min;
+  } else if (val > max) {
+    return max;
+  } else {
+    return val;
+  }
+}
+
+// Return the red, green, blue, and alpha components of a 
+// pixel color value
+uint8_t get_r(uint32_t color) {
+  // bits 24-31
+  return (uint8_t)(color >> 24);
+}
+uint8_t get_g(uint32_t color) {
+  // bits 16-23
+  return (uint8_t)(color >> 16);
+}
+uint8_t get_b(uint32_t color) {
+  // bits 8-15
+  return (uint8_t)(color >> 8);
+}
+uint8_t get_a(uint32_t color) {
+  // bits 0-7 
+  return (uint8_t)color;
+}
+
+// blends foreground and background color component values 
+// using a specified alpha (opacity) value
+uint8_t blend_components(uint32_t fg, uint32_t bg, uint32_t alpha) {
+
+}
+
+// blends foreground and background colors using the 
+// foreground color’s alpha value to produce an opaque color. 
+// (It will call blend_components.)
+uint32_t blend_colors(uint32_t fg, uint32_t bg) {
+
+}
+
+// draws a single pixel to a destination image, blending the 
+// specified foregroudn color with the existing background 
+// color, at a specified pixel index
+void set_pixel(struct Image *img, uint32_t index, uint32_t color) {
+
+}
+
+// returns the result of squaring an int64_t value. The square_dist 
+// function returns the sum of the squares of the x and y distances 
+// between two points.
+int64_t square(int64_t x) {
+
+}
+
+// returns the sum of the squares of the x and y distances 
+// between two points
+int64_t square_dist(int64_t x1, int64_t y1, int64_t x2, int64_t y2) {
+
+}
+
+
 ////////////////////////////////////////////////////////////////////////
 // API functions
 ////////////////////////////////////////////////////////////////////////
