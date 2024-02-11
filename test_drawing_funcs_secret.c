@@ -80,7 +80,7 @@ void check_picture(struct Image *img, Picture *p) {
 
 // prototypes of test functions
 void test_draw_pixel(TestObjs *objs);
-#if 0
+#if 1
 void test_draw_rect(TestObjs *objs);
 void test_draw_circle(TestObjs *objs);
 void test_draw_circle_clip(TestObjs *objs);
@@ -93,7 +93,7 @@ void test_draw_pixel_secret_1c(TestObjs *objs);
 void test_draw_pixel_secret_1d(TestObjs *objs);
 void test_draw_pixel_stress1(TestObjs *objs);
 void test_draw_pixel_stress2(TestObjs *objs);
-#if 0
+#if 1
 void test_draw_pixel_secret_1(TestObjs *objs);
 void test_draw_pixel_secret_2(TestObjs *objs);
 void test_draw_rect_secret_1(TestObjs *objs);
@@ -104,6 +104,21 @@ void test_draw_tile_secret_1(TestObjs *objs);
 void test_draw_tile_secret_2(TestObjs *objs);
 void test_draw_sprite_secret_1(TestObjs *objs);
 void test_draw_sprite_secret_2(TestObjs *objs);
+#endif
+// added prototypes for helper functions
+#if 1
+void test_in_bounds(TestObjs *objs);
+void test_compute_index(TestObjs *objs);
+void test_clamp(TestObjs *objs);
+void test_get_r(TestObjs *objs);
+void test_get_g(TestObjs *objs);
+void test_get_b(TestObjs *objs);
+void test_get_a(TestObjs *objs);
+void test_blend_components(TestObjs *objs);
+void test_blend_colors(TestObjs *objs);
+void test_set_pixel(TestObjs *objs);
+void test_square(TestObjs *objs);
+void test_square_dist(TestObjs *objs);
 #endif
 
 int main(int argc, char **argv) {
@@ -116,7 +131,7 @@ int main(int argc, char **argv) {
 
   // TODO: add TEST() directives for your helper functions
   TEST(test_draw_pixel);
-#if 0
+#if 1
   TEST(test_draw_rect);
   TEST(test_draw_circle);
   TEST(test_draw_circle_clip);
@@ -129,7 +144,7 @@ int main(int argc, char **argv) {
   TEST(test_draw_pixel_secret_1d);
   TEST(test_draw_pixel_stress1);
   TEST(test_draw_pixel_stress2);
-#if 0
+#if 1
   TEST(test_draw_pixel_secret_1);
   TEST(test_draw_pixel_secret_2);
   TEST(test_draw_rect_secret_1);
@@ -140,6 +155,21 @@ int main(int argc, char **argv) {
   TEST(test_draw_tile_secret_2);
   TEST(test_draw_sprite_secret_1);
   TEST(test_draw_sprite_secret_2);
+#endif
+// added TEST for helper functions
+#if 1
+  TEST(test_in_bounds);
+  TEST(test_compute_index);
+  TEST(test_clamp);
+  TEST(test_get_r);
+  TEST(test_get_g);
+  TEST(test_get_b);
+  TEST(test_get_a);
+  TEST(test_blend_components);
+  TEST(test_blend_colors);
+  TEST(test_set_pixel);
+  TEST(test_square);
+  TEST(test_square_dist);
 #endif
 
   TEST_FINI();
@@ -163,7 +193,7 @@ void test_draw_pixel(TestObjs *objs) {
   ASSERT(objs->small.data[SMALL_IDX(4, 2)] == 0x000040FF);
 }
 
-#if 0
+#if 1
 void test_draw_rect(TestObjs *objs) {
   struct Rect red_rect = { .x = 2, .y = 2, .width=3, .height=3 };
   struct Rect blue_rect = { .x = 3, .y = 3, .width=3, .height=3 };
@@ -851,7 +881,7 @@ void test_draw_pixel_stress2(TestObjs *objs) {
   check_picture(&objs->small, &pic);
 }
 
-#if 0
+#if 1
 void test_draw_pixel_secret_1(TestObjs *objs) {
   // test that pixels can be drawn (including correct color blending)
   // in all four corners
@@ -1208,5 +1238,53 @@ void test_draw_sprite_secret_2(TestObjs *objs) {
   };
 
   check_picture(&objs->large, &expected);
+}
+
+void test_in_bounds(TestObjs *objs) {
+
+}
+
+void test_compute_index(TestObjs *objs) {
+
+}
+
+void test_clamp(TestObjs *objs) {
+
+}
+
+void test_get_r(TestObjs *objs) {
+
+}
+
+void test_get_g(TestObjs *objs) {
+
+}
+
+void test_get_b(TestObjs *objs) {
+
+}
+
+void test_get_a(TestObjs *objs) {
+
+}
+
+void test_blend_components(TestObjs *objs) {
+
+}
+
+void test_blend_colors(TestObjs *objs) {
+
+}
+
+void test_set_pixel(TestObjs *objs) {
+
+}
+
+void test_square(TestObjs *objs) {
+
+}
+
+void test_square_dist(TestObjs *objs) {
+
 }
 #endif
