@@ -83,12 +83,21 @@ void test_draw_circle(TestObjs *objs);
 void test_draw_circle_clip(TestObjs *objs);
 void test_draw_tile(TestObjs *objs);
 void test_draw_sprite(TestObjs *objs);
+
 void test_in_bounds(TestObjs *objs);
 void test_compute_index(TestObjs *objs);
 void test_blend_components(TestObjs *objs);
 void test_set_pixel(TestObjs *objs);
 void test_set_pixel_2(TestObjs *objs);
 void test_square(TestObjs *objs);
+
+void test_clamp(TestObjs *objs);
+void test_get_r(TestObjs *objs);
+void test_get_g(TestObjs *objs);
+void test_get_b(TestObjs *objs);
+void test_get_a(TestObjs *objs);
+void test_blend_colors(TestObjs *objs);
+void test_square_dist(TestObjs *objs);
 
 int main(int argc, char **argv) {
   if (argc > 1) {
@@ -105,12 +114,21 @@ int main(int argc, char **argv) {
   TEST(test_draw_circle_clip);
   TEST(test_draw_tile);
   TEST(test_draw_sprite);
+
   TEST(test_in_bounds);
   TEST(test_compute_index);
   TEST(test_blend_components);
   TEST(test_set_pixel);
   TEST(test_set_pixel_2);
   TEST(test_square);
+
+  TEST(test_clamp);
+  TEST(test_get_r);
+  TEST(test_get_g);
+  TEST(test_get_b);
+  TEST(test_get_a);
+  TEST(test_blend_colors);
+  TEST(test_square_dist);
 
   TEST_FINI();
 }
@@ -368,6 +386,61 @@ void test_compute_index(TestObjs *objs) {
 }
 }
 
+void test_clamp(TestObjs *objs) {
+  // less than max
+  ASSERT(clamp(SMALL_W / 2, 0, SMALL_W) == SMALL_W / 2);
+
+  // equal to max
+  ASSERT(clamp(SMALL_H + 1, 0, SMALL_H) == SMALL_H);
+
+  // equal to min
+  ASSERT(clamp(-1, 0, SMALL_W) == 0);
+
+  // value itself, min
+  ASSERT(clamp(LARGE_W - 1, 0, LARGE_W) == LARGE_W - 1);
+
+  ASSERT(clamp(10, 0, 100) == 10); // within range
+  ASSERT(clamp(-10, 0, 100) == 0); // below range
+  ASSERT(clamp(110, 0, 100) == 100); // above range
+}
+
+void test_get_r(TestObjs *objs) {
+  // only red
+  ASSERT(get_r(0xFF000000) == 0xFF);
+  // no red
+  ASSERT(get_r(0x00EEEEBB) == 0x00);
+  // mixed color
+  ASSERT(get_r(0x78AFCDEF) == 0x78);
+}
+
+void test_get_g(TestObjs *objs) { 
+  // only green
+  ASSERT(get_g(0x00FF0000) == 0xFF);
+  // no green
+  ASSERT(get_g(0xFF00BB00) == 0x00);
+  // mixed color
+  ASSERT(get_g(0x12345678) == 0x34);
+}
+
+void test_get_b(TestObjs *objs) {
+  // only blue
+  ASSERT(get_b(0x0000FF00) == 0xFF);
+  // no blue component
+  ASSERT(get_b(0xFFEE0000) == 0x00);
+  // mixed color
+  ASSERT(get_b(0x90ABCD12) == 0xCD);
+
+}
+
+void test_get_a(TestObjs *objs) {
+  // fully opacity
+  ASSERT(get_a(0xAA00BBFF) == 0xFF);
+  // fully transparency
+  ASSERT(get_a(0xCC991300) == 0x00);
+  // partially transparency
+  ASSERT(get_a(0x3248907F) == 0x7F);
+}
+
 void test_blend_components(TestObjs *objs) {
 {
   //opaque foreground
@@ -403,6 +476,30 @@ void test_blend_components(TestObjs *objs) {
   ASSERT(blend_components(123, 123, 128) == 123);
 }
 }
+
+void test_blend_colors(TestObjs *objs) {
+  // opaque foreground over transparent background
+  ASSERT(blend_colors(0xFF0000FF, 0x00FF0000) == 0xFF0000FF);
+
+  // transparent foreground over opaque background
+  ASSERT(blend_colors(0xFF000000, 0x00FF00FF) == 0x00FF00FF);
+
+  // transparent foreground over transparent background
+  ASSERT(blend_colors(0x0000FF00, 0x00FF0000) == 0x00FF00FF);
+
+  // color foreground over opaque background
+  ASSERT(blend_colors(0x00FFFFFF80, 0xFF00FFFF) == 0xFF80FFFF);
+
+  //color foreground over opaque background
+  ASSERT(blend_colors(0xFF0000FE, 0x00FF00FF) == 0xFE0100FF);
+  
+  // color foreground over color background
+  ASSERT(blend_colors(0xFF000001, 0x00FF00EE) == 0x01FE00FF);
+
+  // color foreground over transparent background
+  ASSERT(blend_colors(0xEEEEEE80, 0xFFFFFF00) == 0xF6F6F6FF);
+}
+
 
 void test_set_pixel(TestObjs *objs) {
   //small image
@@ -499,4 +596,19 @@ void test_square(TestObjs *objs) {
   //edge for int64 limits
   ASSERT(square(3037000499LL) == 9223372030926249001LL);
   ASSERT(square(-3037000499LL) == 9223372030926249001LL);
+}
+
+void test_square_dist(TestObjs *objs) {
+  // distance within
+  ASSERT(square_dist(0, 0, SMALL_W - 1, SMALL_H - 1) == (SMALL_W - 1) * (SMALL_W - 1) + (SMALL_H - 1) * (SMALL_H - 1));
+  
+  // distance from corner to corner
+  ASSERT(square_dist(0, 0, LARGE_W - 1, LARGE_H - 1) == (LARGE_W - 1) * (LARGE_W - 1) + (LARGE_H - 1) * (LARGE_H - 1));
+  
+  // distance from a point inside to a point outside
+  ASSERT(square_dist(SMALL_W - 1, SMALL_H - 1, SMALL_W, SMALL_H) == 1 * 1 + 1 * 1);
+  ASSERT(square_dist(LARGE_W - 1, LARGE_H - 1, LARGE_W + 10, LARGE_H + 10) == 11 * 11 + 11 * 11);
+
+  ASSERT(square_dist(0, 0, 3, 4) == 25); // 3-0 squared + 4-0 squared = 9 + 16
+  ASSERT(square_dist(-3, -4, 3, 4) == 100); // 6 squared + 8 squared = 36 + 64
 }
