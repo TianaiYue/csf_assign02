@@ -83,6 +83,12 @@ void test_draw_circle(TestObjs *objs);
 void test_draw_circle_clip(TestObjs *objs);
 void test_draw_tile(TestObjs *objs);
 void test_draw_sprite(TestObjs *objs);
+void test_in_bounds(TestObjs *objs);
+void test_compute_index(TestObjs *objs);
+void test_blend_components(TestObjs *objs);
+void test_set_pixel(TestObjs *objs);
+void test_set_pixel_2(TestObjs *objs);
+void test_square(TestObjs *objs);
 
 int main(int argc, char **argv) {
   if (argc > 1) {
@@ -99,6 +105,12 @@ int main(int argc, char **argv) {
   TEST(test_draw_circle_clip);
   TEST(test_draw_tile);
   TEST(test_draw_sprite);
+  TEST(test_in_bounds);
+  TEST(test_compute_index);
+  TEST(test_blend_components);
+  TEST(test_set_pixel);
+  TEST(test_set_pixel_2);
+  TEST(test_square);
 
   TEST_FINI();
 }
@@ -261,4 +273,230 @@ void test_draw_sprite(TestObjs *objs) {
   };
 
   check_picture(&objs->large, &pic);
+}
+
+void test_in_bounds(TestObjs *objs) {
+  {
+    //within bounds
+    ASSERT(in_bounds(&objs->small, 3, 3) == 1);
+  }
+  {
+    //on edge for small image
+    ASSERT(in_bounds(&objs->small, 0, 0) == 1); 
+    ASSERT(in_bounds(&objs->small, SMALL_W - 1, SMALL_H - 1) == 1); 
+    ASSERT(in_bounds(&objs->small, SMALL_W - 1, 0) == 1); 
+    ASSERT(in_bounds(&objs->small, 0, SMALL_H - 1) == 1);
+  }
+  {
+    //outside bounds for small image
+    ASSERT(in_bounds(&objs->small, -1, 3) == 0);
+    ASSERT(in_bounds(&objs->small, SMALL_W, 3) == 0); 
+    ASSERT(in_bounds(&objs->small, 3, -1) == 0);
+    ASSERT(in_bounds(&objs->small, 3, SMALL_H) == 0);
+  }
+  {
+    //large image
+    ASSERT(in_bounds(&objs->large, 10, 10) == 1);
+    ASSERT(in_bounds(&objs->large, LARGE_W, 10) == 0);
+    ASSERT(in_bounds(&objs->large, 10, LARGE_H) == 0);
+  }
+  {
+    // Edge cases for small image
+    // Right before the edges
+    ASSERT(in_bounds(&objs->small, 1, 0) == 1);
+    ASSERT(in_bounds(&objs->small, 0, 1) == 1);
+    ASSERT(in_bounds(&objs->small, SMALL_W - 2, SMALL_H - 1) == 1);
+    ASSERT(in_bounds(&objs->small, SMALL_W - 1, SMALL_H - 2) == 1);
+    // Right after the edges
+    ASSERT(in_bounds(&objs->small, SMALL_W, 0) == 0);
+    ASSERT(in_bounds(&objs->small, 0, SMALL_H) == 0);
+    ASSERT(in_bounds(&objs->small, -1, SMALL_H - 1) == 0);
+    ASSERT(in_bounds(&objs->small, SMALL_W - 1, -1) == 0);
+  }
+  {
+    // Edge cases for large image
+    // Right before the edges
+    ASSERT(in_bounds(&objs->large, LARGE_W - 2, LARGE_H - 1) == 1);
+    ASSERT(in_bounds(&objs->large, LARGE_W - 1, LARGE_H - 2) == 1);
+    // Right after the edges
+    ASSERT(in_bounds(&objs->large, LARGE_W, LARGE_H - 1) == 0);
+    ASSERT(in_bounds(&objs->large, LARGE_W - 1, LARGE_H) == 0);
+  }
+}
+
+
+void test_compute_index(TestObjs *objs) {
+{
+  //within bounds for small
+  ASSERT(compute_index(&objs->small, 0, 0) == 0);
+  ASSERT(compute_index(&objs->small, SMALL_W - 1, 0) == SMALL_W - 1);
+  ASSERT(compute_index(&objs->small, 0, SMALL_H - 1) == (SMALL_H - 1) * SMALL_W);
+  ASSERT(compute_index(&objs->small, SMALL_W - 1, SMALL_H - 1) == SMALL_W * SMALL_H - 1);
+  ASSERT(compute_index(&objs->small, 3, 2) == 2 * SMALL_W + 3);
+}
+{
+  //on edges for small
+  ASSERT(compute_index(&objs->small, SMALL_W - 1, 1) == 1 * SMALL_W + (SMALL_W - 1));
+  ASSERT(compute_index(&objs->small, 1, SMALL_H - 1) == (SMALL_H - 1) * SMALL_W + 1);
+}
+{
+  //out of bounds for small
+  ASSERT(compute_index(&objs->small, -1, 0) == 0);
+  ASSERT(compute_index(&objs->small, 0, -1) == 0);
+  ASSERT(compute_index(&objs->small, SMALL_W, 0) == 0); 
+  ASSERT(compute_index(&objs->small, 0, SMALL_H) == 0); 
+}
+{
+  //within bounds for large
+  ASSERT(compute_index(&objs->large, 0, 0) == 0);
+  ASSERT(compute_index(&objs->large, LARGE_W - 1, 0) == LARGE_W - 1); 
+  ASSERT(compute_index(&objs->large, 0, LARGE_H - 1) == (LARGE_H - 1) * LARGE_W); 
+  ASSERT(compute_index(&objs->large, LARGE_W - 1, LARGE_H - 1) == LARGE_W * LARGE_H - 1);
+  ASSERT(compute_index(&objs->large, LARGE_W / 2, LARGE_H / 2) == (LARGE_H / 2) * LARGE_W + (LARGE_W / 2));
+}
+{
+  //on edges for large
+  ASSERT(compute_index(&objs->large, LARGE_W - 1, LARGE_H / 2) == (LARGE_H / 2) * LARGE_W + (LARGE_W - 1));
+  ASSERT(compute_index(&objs->large, LARGE_W / 2, LARGE_H - 1) == (LARGE_H - 1) * LARGE_W + (LARGE_W / 2));
+}
+{
+  //out of bounds for large
+  ASSERT(compute_index(&objs->large, -1, 0) == 0);
+  ASSERT(compute_index(&objs->large, 0, -1) == 0);
+  ASSERT(compute_index(&objs->large, LARGE_W, 0) == 0);
+  ASSERT(compute_index(&objs->large, 0, LARGE_H) == 0);
+}
+}
+
+void test_blend_components(TestObjs *objs) {
+{
+  //opaque foreground
+  ASSERT(blend_components(255, 0, 255) == 255);
+  ASSERT(blend_components(0, 255, 255) == 0);
+}
+{
+  //transparent foreground
+  ASSERT(blend_components(255, 0, 0) == 0);
+  ASSERT(blend_components(0, 255, 0) == 255);
+}
+{
+  //low transparency 
+  ASSERT(blend_components(255, 100, 10) == 106);
+  ASSERT(blend_components(100, 255, 10) == 248);
+  //high transparency 
+  ASSERT(blend_components(255, 100, 245) == 248);
+  ASSERT(blend_components(100, 255, 245) == 106);
+}
+{
+  //50% transparency
+  ASSERT(blend_components(255, 0, 128) == 128);
+  ASSERT(blend_components(0, 255, 128) == 127); 
+  //approx 40% transparency
+  ASSERT(blend_components(100, 200, 100) == 160);
+  //approx 80% transparency
+  ASSERT(blend_components(100, 200, 200) == 121);
+}
+{
+  //blending with same foreground and background values
+  ASSERT(blend_components(123, 123, 255) == 123);
+  ASSERT(blend_components(123, 123, 0) == 123);
+  ASSERT(blend_components(123, 123, 128) == 123);
+}
+}
+
+void test_set_pixel(TestObjs *objs) {
+  //small image
+  {
+    //opaque color
+    set_pixel(&objs->small, SMALL_IDX(3, 3), 0xFF0000FF);
+    ASSERT(objs->small.data[SMALL_IDX(3, 3)] == 0xFF0000FF);
+  }
+  {
+    //corner pixel
+    set_pixel(&objs->small, SMALL_IDX(0, 0), 0xFF0000FF);
+    ASSERT(objs->small.data[SMALL_IDX(0, 0)] == 0xFF0000FF);
+    //edge pixel
+    set_pixel(&objs->small, SMALL_IDX(0, SMALL_H / 2), 0x00FF00FF);
+    ASSERT(objs->small.data[SMALL_IDX(0, SMALL_H / 2)] == 0x00FF00FF);
+  }
+  {
+    //transparent color
+    uint32_t originalColor = objs->small.data[SMALL_IDX(3, 3)];
+    set_pixel(&objs->small, SMALL_IDX(3, 3), 0x00FF0000);
+    ASSERT(objs->small.data[SMALL_IDX(3, 3)] == originalColor);
+  }
+  {
+    //out of bounds index
+    set_pixel(&objs->small, objs->small.width * objs->small.height, 0x00FF00FF);
+    //no alpha blending
+    set_pixel(&objs->small, 0, 0xFFFFFFFF);
+    ASSERT(objs->small.data[0] == 0xFFFFFFFF);
+  }
+  {
+    //overwrite an existing color with a transparent one
+    objs->small.data[SMALL_IDX(1, 1)] = 0xFFFFFFFF;
+    set_pixel(&objs->small, SMALL_IDX(1, 1), 0x00000000);
+    ASSERT(objs->small.data[SMALL_IDX(1, 1)] == 0xFFFFFFFF);
+  }
+  {
+    // Semi-transparent color over white
+    objs->small.data[SMALL_IDX(2, 2)] = 0xFFFFFFFF;
+    set_pixel(&objs->small, SMALL_IDX(2, 2), 0xFF000080);
+    ASSERT(objs->small.data[SMALL_IDX(2, 2)] == 0xFF7F7FFF);
+  }
+}
+
+void test_set_pixel_2(TestObjs *objs) {
+  //large image
+  {
+    //corner pixel
+    int index = 0;
+    set_pixel(&objs->large, index, 0xFF0000FF);
+    ASSERT(objs->large.data[index] == 0xFF0000FF);
+  }
+  {
+    //edge pixel
+    int index_2 = (LARGE_H / 2) * LARGE_W;
+    set_pixel(&objs->large, index_2, 0x00FF00FF);
+    ASSERT(objs->large.data[index_2] == 0x00FF00FF);
+  }
+  {
+    //transparent color
+    int index_3 = LARGE_W - 1;
+    uint32_t originalColor = objs->large.data[index_3];
+    set_pixel(&objs->large, index_3, 0x00000000);
+    ASSERT(objs->large.data[index_3] == originalColor);
+  }
+  {
+    //last pixel of the image to opaque blue
+    int index_4 = LARGE_W * LARGE_H - 1;
+    set_pixel(&objs->large, index_4, 0x0000FFFF);
+    ASSERT(objs->large.data[index_4] == 0x0000FFFF);
+  }
+  {
+    //semi-transparent color
+    int x = LARGE_W / 2;
+    int y = LARGE_H / 2;
+    int index_5 = y * LARGE_W + x;
+    objs->large.data[index_5] = 0xFFFFFFFF;
+    set_pixel(&objs->large, index_5, 0xFF000080);
+    ASSERT(objs->large.data[index_5] == 0xFF7F7FFF);
+  }
+}
+
+
+void test_square(TestObjs *objs) {
+  //zero
+  ASSERT(square(0) == 0);
+  //pos
+  ASSERT(square(1) == 1);
+  ASSERT(square(12) == 144);
+  ASSERT(square(1000) == 1000000);
+  //neg
+  ASSERT(square(-1) == 1);
+  ASSERT(square(-12) == 144);
+  ASSERT(square(-1000) == 1000000);
+  //edge for int64 limits
+  ASSERT(square(3037000499LL) == 9223372030926249001LL);
+  ASSERT(square(-3037000499LL) == 9223372030926249001LL);
 }
