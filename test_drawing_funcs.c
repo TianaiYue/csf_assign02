@@ -1,3 +1,11 @@
+/*
+ * Tests for the drawing and helper functions in C
+ * for basic graphic operations.
+ * CSF Assignment 2
+ * Tianai Yue, Cassie Zhang
+ * tyue4@jhu.edu, xzhan304@jhu.edu
+ */
+
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -5,7 +13,6 @@
 #include "image.h"
 #include "drawing_funcs.h"
 #include "tctest.h"
-// TODO: add prototypes for your helper functions
 
 // an expected color identified by a (non-zero) character code
 typedef struct {
@@ -609,6 +616,6 @@ void test_square_dist(TestObjs *objs) {
   ASSERT(square_dist(SMALL_W - 1, SMALL_H - 1, SMALL_W, SMALL_H) == 1 * 1 + 1 * 1);
   ASSERT(square_dist(LARGE_W - 1, LARGE_H - 1, LARGE_W + 10, LARGE_H + 10) == 11 * 11 + 11 * 11);
 
-  ASSERT(square_dist(0, 0, 3, 4) == 25); // 3-0 squared + 4-0 squared = 9 + 16
-  ASSERT(square_dist(-3, -4, 3, 4) == 100); // 6 squared + 8 squared = 36 + 64
+  ASSERT(square_dist(0, 0, 3, 4) == 25);
+  ASSERT(square_dist(-3, -4, 3, 4) == 100);
 }
