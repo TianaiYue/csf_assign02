@@ -1,5 +1,13 @@
 // C implementations of drawing functions (and helper functions)
 
+/*
+ * Implementation of drawing and helper functions in C 
+ * for basic graphic operations.
+ * CSF Assignment 2
+ * Tianai Yue, Cassie Zhang
+ * tyue4@jhu.edu, xzhan304@jhu.edu
+ */
+
 #include <assert.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -9,10 +17,19 @@
 // Helper functions
 ////////////////////////////////////////////////////////////////////////
 
-// TODO: implement helper functions
-
+//
 // Checks x and y coordinates to determine whether they 
-// are in bounds in the specified image
+// are in bounds in the specified image.
+//
+// Parameters:
+//   img   - pointer to struct Image
+//   x     - x coordinate (pixel column)
+//   y     - y coordinate (pixel row)
+//
+// Returns:
+//   a int32_t, 1 if the coordinates are within bounds, 
+//   0 otherwise
+//
 int32_t in_bounds(struct Image *img, int32_t x, int32_t y) {
   if (x >= 0 && x < img->width && y >= 0 && y < img->height) {
     return 1;
@@ -21,8 +38,19 @@ int32_t in_bounds(struct Image *img, int32_t x, int32_t y) {
   }
 }
 
-// computes the index of a pixel in an image’s data array 
-// given its x and y coordinates
+//
+// Computes the index of a pixel in an image’s data array 
+// given its x and y coordinates.
+//
+// Parameters:
+//   img   - pointer to struct Image
+//   x     - x coordinate (pixel column)
+//   y     - y coordinate (pixel row)
+//
+// Returns:
+//   the index of the pixel in the image's data array an 
+//   uint32_t. Returns 0 if coordinates are out of bounds
+//
 uint32_t compute_index(struct Image *img, int32_t x, int32_t y) {
   if (in_bounds(img, x, y)) {
     return (uint32_t)(y * img->width + x);
@@ -30,8 +58,18 @@ uint32_t compute_index(struct Image *img, int32_t x, int32_t y) {
   return 0;
 }
 
+//
 // Constrains a value so that it is greater than or equal 
-// to min and less than or equal to max
+// to min and less than or equal to max.
+//
+// Parameters:
+//   val - The value to be clamped.
+//   x     - x coordinate (pixel column)
+//   y     - y coordinate (pixel row)
+//
+// Returns:
+//   the clamped value as a int32_t
+//
 int32_t clamp(int32_t val, int32_t min, int32_t max) {\
   if (val < min) {
     return min;
@@ -42,8 +80,16 @@ int32_t clamp(int32_t val, int32_t min, int32_t max) {\
   }
 }
 
-// Return the red, green, blue, and alpha components of a 
-// pixel color value
+//
+// Returns the red, green, blue, and alpha components of a 
+// pixel color value.
+// 
+// Parameters:
+//   color - uint32_t color value
+//
+// Returns:
+//   the color component as an uint8_t
+//
 uint8_t get_r(uint32_t color) {
   // bits 24-31
   return (uint8_t)(color >> 24);
@@ -61,16 +107,36 @@ uint8_t get_a(uint32_t color) {
   return (uint8_t)color;
 }
 
-// blends foreground and background color component values 
-// using a specified alpha (opacity) value
+//
+// Blends foreground and background color component values 
+// using a specified alpha (opacity) value.
+// 
+// Parameters:
+//   fg    - The foreground color component (0-255)
+//   bg    - The background color component (0-255)
+//   alpha - The opacity value for the foreground, 
+//           where 255 is fully opaque.
+//
+// Returns:
+//   the blended color component as an uint8_t
+//
 uint8_t blend_components(uint32_t fg, uint32_t bg, uint32_t alpha) {
   uint32_t result = (alpha * fg + (255 - alpha) * bg) / 255;
   return (uint8_t)result;
 }
 
-// blends foreground and background colors using the 
+//
+// Blends foreground and background colors using the 
 // foreground color’s alpha value to produce an opaque color. 
-// (It will call blend_components.)
+//
+// Parameters:
+//   fg    - The foreground color component in RGBA format
+//   bg    - The background color component in RGBA format
+//
+// Returns:
+//   the blended color as a uint32_t in RGBA format
+//   with alpha component set to 255
+//
 uint32_t blend_colors(uint32_t fg, uint32_t bg) {
   uint8_t fg_a = get_a(fg);
   uint8_t blended_r = blend_components(get_r(fg), get_r(bg), fg_a);
@@ -82,9 +148,16 @@ uint32_t blend_colors(uint32_t fg, uint32_t bg) {
   return blended_color;
 }
 
-// draws a single pixel to a destination image, blending the 
+//
+// Draws a single pixel to a destination image, blending the 
 // specified foregroudn color with the existing background 
-// color, at a specified pixel index
+// color, at a specified pixel index.
+// 
+// Parameters:
+//   img   - pointer to struct Image
+//   index - index where the pixel is set
+//   color - uint32_t color value
+//
 void set_pixel(struct Image *img, uint32_t index, uint32_t color) {
   if (index < img->width * img->height) {
     uint32_t bg_color = img->data[index];
@@ -93,13 +166,29 @@ void set_pixel(struct Image *img, uint32_t index, uint32_t color) {
   }
 }
 
-// returns the result of squaring an int64_t value.
+//
+// Squares a int64_t value.
+//
+// Parameters:
+//   x - int64_t value to be squared
+//
+// Returns:
+//   the square of the input value as an int64_t
+//
 int64_t square(int64_t x) {
   return x * x;
 }
 
-// returns the sum of the squares of the x and y distances 
-// between two points
+//
+// Finds the distances between two points.
+//
+// Parameters:
+//   x1, y1 - coordinates of the first point
+//   x2, y2 - coordinates of the second point
+//
+// Returns:
+//   the distances between the two points as an int64_t
+//
 int64_t square_dist(int64_t x1, int64_t y1, int64_t x2, int64_t y2) {
   int64_t distance_x = x2 - x1;
   int64_t distance_y = y2 - y1;
@@ -123,7 +212,6 @@ int64_t square_dist(int64_t x1, int64_t y1, int64_t x2, int64_t y2) {
 //   color - uint32_t color value
 //
 void draw_pixel(struct Image *img, int32_t x, int32_t y, uint32_t color) {
-  // TODO: implement
   if (in_bounds(img, x, y)) {
     uint32_t index = compute_index(img, x, y);
     set_pixel(img, index, color);
@@ -143,7 +231,6 @@ void draw_pixel(struct Image *img, int32_t x, int32_t y, uint32_t color) {
 void draw_rect(struct Image *img,
                const struct Rect *rect,
                uint32_t color) {
-  // TODO: implement
   // clamp coordinates to be within image bounds.
   int32_t x_start = clamp(rect->x, 0, img->width);
   int32_t y_start = clamp(rect->y, 0, img->height);
@@ -173,7 +260,6 @@ void draw_rect(struct Image *img,
 void draw_circle(struct Image *img,
                  int32_t x, int32_t y, int32_t r,
                  uint32_t color) {
-  // TODO: implement
   // loop over a square bounding box that contains the circle
   for (int32_t i = -r; i <= r; i++) {
     for (int32_t j = -r; j <= r; j++) {
@@ -205,7 +291,6 @@ void draw_tile(struct Image *img,
                int32_t x, int32_t y,
                struct Image *tilemap,
                const struct Rect *tile) {
- // TODO: implement
  // check if tile rectangle is not entirely within the bounds of tilemap
   if (tile->x < 0 || tile->y < 0 || 
       tile->x + tile->width > tilemap->width || 
@@ -248,14 +333,12 @@ void draw_sprite(struct Image *img,
                  int32_t x, int32_t y,
                  struct Image *spritemap,
                  const struct Rect *sprite) {
-  // TODO: implement
   // check is sprite is not entirely within the bounds of the spritemap
   if (sprite->x < 0 || sprite->y < 0 || 
       sprite->x + sprite->width > spritemap->width || 
       sprite->y + sprite->height > spritemap->height) {
     return;
   }
-
   for (int32_t i = 0; i < sprite->height; i++) {
     for (int32_t j = 0; j < sprite->width; j++) {
       int32_t source_x = sprite->x + j;
