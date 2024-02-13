@@ -144,18 +144,20 @@ void draw_rect(struct Image *img,
                const struct Rect *rect,
                uint32_t color) {
   // TODO: implement
-  int32_t x_start = clamp(rect->x, 0, img->width - 1);
-  int32_t y_start = clamp(rect->y, 0, img->height - 1);
-  
+  // clamp coordinates to be within image bounds.
+  int32_t x_start = clamp(rect->x, 0, img->width);
+  int32_t y_start = clamp(rect->y, 0, img->height);
   int32_t x_end = clamp(rect->x + rect->width, 0, img->width);
   int32_t y_end = clamp(rect->y + rect->height, 0, img->height);
 
+  //draw each pixel in the rect area
   for (int32_t y = y_start; y < y_end; y++) {
     for (int32_t x = x_start; x < x_end; x++) {
-        draw_pixel(img, x, y, color);
+      draw_pixel(img, x, y, color);
     }
   }
 }
+
 
 //
 // Draw a circle.
@@ -172,13 +174,14 @@ void draw_circle(struct Image *img,
                  int32_t x, int32_t y, int32_t r,
                  uint32_t color) {
   // TODO: implement
-  if (r <= 0) {
-    return;
-  }
-  for (int32_t i = y - r; i <= y + r; i++) {
-    for (int32_t j = x - r; j <= x + r; j++) {
-      if (square_dist(j, i, x, y) <= (int64_t)r * r) {
-        draw_pixel(img, j, i, color);
+  // loop over a square bounding box that contains the circle
+  for (int32_t i = -r; i <= r; i++) {
+    for (int32_t j = -r; j <= r; j++) {
+      // check if points within the bonds
+      if (i*i + j*j <= r*r) {
+        if (in_bounds(img, x+j, y+i)) {
+          set_pixel(img, compute_index(img, x+j, y+i), color);
+        }
       }
     }
   }
