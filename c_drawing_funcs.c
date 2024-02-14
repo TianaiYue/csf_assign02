@@ -333,7 +333,7 @@ void draw_sprite(struct Image *img,
                  int32_t x, int32_t y,
                  struct Image *spritemap,
                  const struct Rect *sprite) {
-  // check is sprite is not entirely within the bounds of the spritemap
+  // check if sprite is not entirely within the bounds of the spritemap
   if (sprite->x < 0 || sprite->y < 0 || 
       sprite->x + sprite->width > spritemap->width || 
       sprite->y + sprite->height > spritemap->height) {
