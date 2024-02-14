@@ -245,7 +245,11 @@ void draw_sprite(struct Image *img,
                  const struct Rect *sprite) {
   // TODO: implement
   // check if sprite is not entirely within the bounds of the spritemap
-  if (sprite->x < 0 || sprite->y < 0 || sprite->x + sprite->width > spritemap->width || sprite->y + sprite->height > spritemap->height) {
+  int32_t bottom_right_x = sprite->x + sprite->width - 1;
+  int32_t bottom_right_y = sprite->y + sprite->height - 1;
+
+  if (!in_bounds(spritemap, sprite->x, sprite->y) || 
+      !in_bounds(spritemap, bottom_right_x, bottom_right_y)) {
     return;
   }
   // loop through sprite pixels, starting at top-left corner
