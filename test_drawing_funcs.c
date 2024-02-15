@@ -380,10 +380,10 @@ void test_compute_index(TestObjs *objs) {
 }
 {
   //out of bounds for small
-  ASSERT(compute_index(&objs->small, -1, 0) == 0);
-  ASSERT(compute_index(&objs->small, 0, -1) == 0);
-  ASSERT(compute_index(&objs->small, SMALL_W, 0) == 0); 
-  ASSERT(compute_index(&objs->small, 0, SMALL_H) == 0); 
+  ASSERT(compute_index(&objs->small, -1, 0) == -1);
+  ASSERT(compute_index(&objs->small, 0, -1) == -8);
+  ASSERT(compute_index(&objs->small, SMALL_W, 0) == 8); 
+  ASSERT(compute_index(&objs->small, 0, SMALL_H) == 48); 
 }
 {
   //within bounds for large
@@ -400,10 +400,10 @@ void test_compute_index(TestObjs *objs) {
 }
 {
   //out of bounds for large
-  ASSERT(compute_index(&objs->large, -1, 0) == 0);
-  ASSERT(compute_index(&objs->large, 0, -1) == 0);
-  ASSERT(compute_index(&objs->large, LARGE_W, 0) == 0);
-  ASSERT(compute_index(&objs->large, 0, LARGE_H) == 0);
+  ASSERT(compute_index(&objs->large, -1, 0) == -1);
+  ASSERT(compute_index(&objs->large, 0, -1) == -24);
+  ASSERT(compute_index(&objs->large, LARGE_W, 0) == 24);
+  ASSERT(compute_index(&objs->large, 0, LARGE_H) == 480);
 }
 }
 

@@ -54,10 +54,7 @@ int32_t in_bounds(struct Image *img, int32_t x, int32_t y) {
 //   uint32_t. Returns 0 if coordinates are out of bounds
 //
 uint32_t compute_index(struct Image *img, int32_t x, int32_t y) {
-  if (in_bounds(img, x, y)) {
-    return (uint32_t)(y * img->width + x);
-  }
-  return 0;
+  return (uint32_t)(y * img->width + x);
 }
 
 //
