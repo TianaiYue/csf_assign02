@@ -23,6 +23,71 @@
 
 /* TODO: implement your helper functions here */
 
+/*
+ * Checks x and y coordinates to determine whether they 
+ * are in bounds in the specified image.
+
+ * Parameters:
+ *   %rdi     - pointer to struct Image
+ *   %esi     - x coordinate (pixel column)
+ *   %edx     - y coordinate (pixel row)
+ * 
+ * 
+ * Returns:
+ *   a int32_t, 1 if the coordinates are within bounds, 
+ *   0 otherwise
+ */
+	.globl in_bounds
+in_bounds:
+	/*subq $8, %rsp*/
+
+	cmp $0, %esi		/* compare 0 with x coordinate */
+	jl .LOutofBounds  	/* if x < 0, jump to the false branch */
+
+	movl 0(%rdi), %ebx	/* retrieve the width of the image */
+	cmp %ebx, %esi 		/* compare width with x coordinate */
+	jge .LOutofBounds	/* if x >= width, jump to the false branch */
+
+	cmp $0, %edx		/* compare 0 with y coordinate */
+	jl .LOutofBounds  	/* if y < 0, jump to the false branch */
+
+	movl 4(%rdi), %ecx		/* retrieve the hight of the image */
+	cmp %ecx, %edx 			/* compare height with y coordinate */
+	jge .LOutofBounds		/* if y < height, jump to the false branch */
+
+	movl $1, %eax		/*addq $8, %rsp*/
+	ret
+
+.LOutofBounds: 
+	movl $0, %eax 		/*addq $8, %rsp*/
+	ret
+
+
+/*
+ * Computes the index of a pixel in an image’s data array 
+ * given its x and y coordinates.
+ *
+ * Parameters:
+ *   %rdi  - pointer to struct Image
+ *   %esi     - x coordinate (pixel column)
+ *   %edx     - y coordinate (pixel row)
+ *
+ * Returns (in %eax):
+ *   the index of the pixel in the image's data array as 
+ *   uint32_t. Returns 0 if coordinates are out of bounds.
+ */
+	.globl compute_index
+compute_index:
+
+	movl 0(%rdi), %ebx		/* retrieve the width of the image */
+	imull %edx, %ebx		/* multiply the width by the y coordinate */
+	add %ebx, %esi		/* add the product to the x coordinate */
+	movl %esi, %eax		/* move the index into the return register */
+
+	ret
+
+
+
 /***********************************************************************
    Public API functions
  ***********************************************************************/
