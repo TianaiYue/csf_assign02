@@ -87,6 +87,39 @@ compute_index:
 	ret
 
 
+/*
+ * Blends foreground and background color component values 
+ * using a specified alpha (opacity) value.
+ *
+ * Parameters:
+ *   %rdi - foreground color component (0-255)
+ *   %rsi - background color component (0-255)
+ *   %edx - The opacity value for the foreground, where 255 is fully opaque.
+ *
+ * Returns (in %eax):
+ *   the blended color component as a uint32_t
+ */
+
+.globl blend_components
+blend_components:
+
+    movl %edi, %eax          # move foreground to %eax for multiplication
+    imull %edx, %eax         # multiply foreground by alpha (result in %eax)
+
+    movl $255, %ebx          # load 255 into %ebx
+    subl %edx, %ebx          # subtract alpha from 255 (result in %ebx)
+    imull %esi, %ebx         # multiply background by (255 - alpha) (result in %ebx)
+
+    addl %ebx, %eax          # add the results of the two multiplications
+
+    xorl %edx, %edx          # zero %edx before division to avoid overflow
+    movl $255, %ebx          # load 255 into %ebx for division
+    divl %ebx                # divide by 255 (quotient in %eax)
+
+    ret                  
+
+
+
 
 /***********************************************************************
    Public API functions
@@ -104,7 +137,7 @@ compute_index:
 	.globl draw_pixel
 draw_pixel:
 	/* TODO: implement */
-	ret
+    ret
 
 
 /*

@@ -12,3 +12,8 @@ The interesting thing we found is that the draw_tile function utilizes a direct 
 efficiency in regions without blending needs, significantly speeding up the process. Conversely, the 
 draw_sprite function introduced alpha value checks to bypass blending for fully transparent pixels, 
 enhancing performance by reducing unnecessary computations.
+
+Milestone 2
+Both Cassie and Tianai did relatively equal amounts of work and effort.
+Tiana: draw_pixel, set_pixel, blend_components, 
+Cassie: in_bounds, compute_index, blend_colors, get_r/g/b/a

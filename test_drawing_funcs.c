@@ -22,7 +22,7 @@ uint32_t compute_index(struct Image *img, int32_t x, int32_t y);
 // uint8_t get_g(uint32_t color);
 // uint8_t get_b(uint32_t color);
 // uint8_t get_a(uint32_t color);
-// uint8_t blend_components(uint32_t fg, uint32_t bg, uint32_t alpha);
+uint8_t blend_components(uint32_t fg, uint32_t bg, uint32_t alpha);
 // uint32_t blend_colors(uint32_t fg, uint32_t bg);
 // void set_pixel(struct Image *img, uint32_t index, uint32_t color);
 // int64_t square(int64_t x);
@@ -107,7 +107,7 @@ void check_picture(struct Image *img, Picture *p) {
 
 void test_in_bounds(TestObjs *objs);
 void test_compute_index(TestObjs *objs);
-// void test_blend_components(TestObjs *objs);
+void test_blend_components(TestObjs *objs);
 // void test_set_pixel(TestObjs *objs);
 // void test_set_pixel_2(TestObjs *objs);
 // void test_square(TestObjs *objs);
@@ -138,7 +138,7 @@ int main(int argc, char **argv) {
 
   TEST(test_in_bounds);
   TEST(test_compute_index);
-  // TEST(test_blend_components);
+  TEST(test_blend_components);
   // TEST(test_set_pixel);
   // TEST(test_set_pixel_2);
   // TEST(test_square);
@@ -462,41 +462,41 @@ void test_compute_index(TestObjs *objs) {
 //   ASSERT(get_a(0x3248907F) == 0x7F);
 // }
 
-// void test_blend_components(TestObjs *objs) {
-// {
-//   //opaque foreground
-//   ASSERT(blend_components(255, 0, 255) == 255);
-//   ASSERT(blend_components(0, 255, 255) == 0);
-// }
-// {
-//   //transparent foreground
-//   ASSERT(blend_components(255, 0, 0) == 0);
-//   ASSERT(blend_components(0, 255, 0) == 255);
-// }
-// {
-//   //low transparency 
-//   ASSERT(blend_components(255, 100, 10) == 106);
-//   ASSERT(blend_components(100, 255, 10) == 248);
-//   //high transparency 
-//   ASSERT(blend_components(255, 100, 245) == 248);
-//   ASSERT(blend_components(100, 255, 245) == 106);
-// }
-// {
-//   //50% transparency
-//   ASSERT(blend_components(255, 0, 128) == 128);
-//   ASSERT(blend_components(0, 255, 128) == 127); 
-//   //approx 40% transparency
-//   ASSERT(blend_components(100, 200, 100) == 160);
-//   //approx 80% transparency
-//   ASSERT(blend_components(100, 200, 200) == 121);
-// }
-// {
-//   //blending with same foreground and background values
-//   ASSERT(blend_components(123, 123, 255) == 123);
-//   ASSERT(blend_components(123, 123, 0) == 123);
-//   ASSERT(blend_components(123, 123, 128) == 123);
-// }
-// }
+void test_blend_components(TestObjs *objs) {
+{
+  //opaque foreground
+  ASSERT(blend_components(255, 0, 255) == 255);
+  ASSERT(blend_components(0, 255, 255) == 0);
+}
+{
+  //transparent foreground
+  ASSERT(blend_components(255, 0, 0) == 0);
+  ASSERT(blend_components(0, 255, 0) == 255);
+}
+{
+  //low transparency 
+  ASSERT(blend_components(255, 100, 10) == 106);
+  ASSERT(blend_components(100, 255, 10) == 248);
+  //high transparency 
+  ASSERT(blend_components(255, 100, 245) == 248);
+  ASSERT(blend_components(100, 255, 245) == 106);
+}
+{
+  //50% transparency
+  ASSERT(blend_components(255, 0, 128) == 128);
+  ASSERT(blend_components(0, 255, 128) == 127); 
+  //approx 40% transparency
+  ASSERT(blend_components(100, 200, 100) == 160);
+  //approx 80% transparency
+  ASSERT(blend_components(100, 200, 200) == 121);
+}
+{
+  //blending with same foreground and background values
+  ASSERT(blend_components(123, 123, 255) == 123);
+  ASSERT(blend_components(123, 123, 0) == 123);
+  ASSERT(blend_components(123, 123, 128) == 123);
+}
+}
 
 // void test_blend_colors(TestObjs *objs) {
 //   // opaque foreground over transparent background
