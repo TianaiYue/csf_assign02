@@ -32,7 +32,6 @@
  *   %esi     - x coordinate (pixel column)
  *   %edx     - y coordinate (pixel row)
  * 
- * 
  * Returns:
  *   a int32_t, 1 if the coordinates are within bounds, 
  *   0 otherwise
@@ -86,6 +85,50 @@ compute_index:
 
 	ret
 
+/* 
+ * Constrains a value so that it is greater than or equal 
+ * to min and less than or equal to max.
+ * 
+ * Parameters:
+ *   %edi 	  - The value to be clamped
+ *   %esi     - x coordinate (pixel column)
+ *   %edx     - y coordinate (pixel row)
+ *
+ * Returns (in %eax):
+ *   the clamped value as a int32_t
+ *
+ */
+	.globl clamp
+clamp:
+	ret
+
+
+/*
+ * Returns the red, green, blue, and alpha components of a 
+ * pixel color value.
+ * 
+ * Parameters:
+ *   %edi - uint32_t color value
+ *
+ * Returns (in %eax):
+ *   the color components as uint8_t values
+ */
+	.globl get_r
+get_r:
+	ret
+
+	.globl get_g
+get_g:
+	ret
+
+	.globl get_b
+get_b:
+	ret
+
+	.globl get_a
+get_a:
+	ret
+
 
 /*
  * Blends foreground and background color component values 
@@ -99,8 +142,7 @@ compute_index:
  * Returns (in %eax):
  *   the blended color component as a uint32_t
  */
-
-.globl blend_components
+	.globl blend_components
 blend_components:
 
     movl %edi, %eax          # move foreground to %eax for multiplication
@@ -117,6 +159,66 @@ blend_components:
     divl %ebx                # divide by 255 (quotient in %eax)
 
     ret                  
+
+
+/*
+ * Blends foreground and background colors using the 
+ * foreground color’s alpha value to produce an opaque color. 
+ *
+ * Parameters:
+ *   %edi    - The foreground color component in RGBA format
+ *   %esi    - The background color component in RGBA format
+ *
+ * Returns (in %eax):
+ *   the blended color as a uint32_t in RGBA format
+ *   with alpha component set to 255
+ */
+	.globl blend_colors
+blend_colors:
+	ret
+
+
+/*
+ * Draws a single pixel to a destination image, blending the 
+ * specified foreground color with the existing background 
+ * color, at a specified pixel index.
+ * 
+ * Parameters:
+ *   %rdi   - pointer to struct Image
+ *   %esi - index where the pixel is set
+ *   %edx - uint32_t color value
+ */
+	.globl set_pixel
+set_pixel:
+	ret
+
+/*
+ * Squares an int64_t value.
+ *
+ * Parameters:
+ *   %rdi - int64_t value to be squared
+ *
+ * Returns (in %rax):
+ *   the square of the input value as an int64_t
+ */
+	.globl square	
+square:
+	ret
+
+
+/*
+ * Finds the distance between two points.
+ *
+ * Parameters:
+ *   %rdi, %rsi - coordinates of the first point
+ *   %rdx, %rcx - coordinates of the second point
+ *
+ * Returns (in %rax):
+ *   the distance between the two points as an int64_t
+ */
+	.globl square_dist
+square_dist:
+	ret
 
 
 
