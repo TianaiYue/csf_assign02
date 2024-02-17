@@ -38,8 +38,6 @@
  */
 	.globl in_bounds
 in_bounds:
-	/*subq $8, %rsp*/
-
 	cmp $0, %esi		/* compare 0 with x coordinate */
 	jl .LOutofBounds  	/* if x < 0, jump to the false branch */
 
@@ -54,11 +52,11 @@ in_bounds:
 	cmp %ecx, %edx 			/* compare height with y coordinate */
 	jge .LOutofBounds		/* if y < height, jump to the false branch */
 
-	movl $1, %eax		/*addq $8, %rsp*/
+	movl $1, %eax
 	ret
 
 .LOutofBounds: 
-	movl $0, %eax 		/*addq $8, %rsp*/
+	movl $0, %eax
 	ret
 
 
@@ -116,25 +114,27 @@ clamp:
 	.globl get_r
 get_r:
 	movl %edi, %eax		# move color value to return value
-	shrl $24, %eax		# Shift the color value right by 24 bits to get the red component
+	shrl $24, %eax		# shift the color value right by 24 bits to get the red component
 	ret
 
 	.globl get_g
 get_g:
 	movl %edi, %eax		# move color value to return value
-	shrl $16, %eax		# Shift the color value right by 16 bits to get the green component
+	shrl $16, %eax		# shift the color value right by 16 bits to get the green component
+	andl $0xFF, %eax	# least significant 8 bits
 	ret
 
 	.globl get_b
 get_b:
 	movl %edi, %eax		# move color value to return value
-	shrl $8, %eax 		# Shift the color value right by 8 bits to get the blue component
+	shrl $8, %eax 		# shift the color value right by 8 bits to get the blue component
+	andl $0xFF, %eax	# least significant 8 bits
 	ret
 
 	.globl get_a
 get_a:
 	movl %edi, %eax   	# move color value to return value
-	#shrl $8, %eax 		# Shift the color value right by 8 bits to get the alpha component
+	and $0xFF, %eax     # isolate the alpha component by ANDing with 0xFF
 	ret
 
 
@@ -183,6 +183,75 @@ blend_components:
  */
 	.globl blend_colors
 blend_colors:
+	pushq %r12
+	pushq %r13
+	pushq %r14
+	pushq %r15
+	subq $8, %rsp
+
+	movl %edi, %r12d 	# save fg color in r12d
+	movl %esi, %r13d	# save bg color in r13d
+
+	# get the alpha value of fg
+	movl %r12d, %edi	# move fg color to the first parameter for get_a
+	call get_a			# get alpha of fg
+	movl %eax, %r14d	# save in callee saved value
+
+	# blend the red color
+	movl %r14d, %edx	# move to third parameter
+
+	movl %r13d, %edi	# move bg color to first parameter
+	call get_r			# get red of bg
+	movl %eax, %esi		# save in second parameter
+
+	movl %r12d, %edi    # fg color to first parameter for get_r
+	call get_r			# get red of fg
+	movl %eax, %edi		# save in first parameter
+
+	call blend_components # blended_r
+	shll $24, %eax		# shift right by 24 bits for the red component
+	movl %eax, %r10d	# save in r10d
+
+	# blend the green color 
+	movl %r14d, %edx 	# move alpha of fg to third parameter
+
+	movl %r13d, %edi 	# move bg color into first parameter
+	call get_g			# get green of bg
+	movl %eax, %esi		# save in second parameter
+
+	movl %r12d, %edi	# move fg color into first parameter
+	call get_g			# get green of fg
+	movl %eax, %edi		# save in first parameter
+
+	call blend_components	# blended_g
+	shll $16, %eax		# shift right by 16 bits for the green component
+	movl %eax, %r11d	# save in r11d
+	
+	# blend the blue color
+	movl %r14d, %edx 	# move alpha of fg to third parameter
+
+	movl %r13d, %edi 	# move bg color into first parameter
+	call get_b			# get blue of bg
+	movl %eax, %esi		# save in second parameter
+
+	movl %r12d, %edi	# move fg color into first parameter
+	call get_b			# get blue of fg
+	movl %eax, %edi		# save in first parameter
+
+	call blend_components	# blended_b
+	shll $8, %eax		# shift right by 8 bits for the blue component
+	movl %eax, %r15d    # save in r15d
+
+	movl %r10d, %eax		# move blended_r to %eax
+	orl %r11d, %eax      # OR blended_g with %eax, red and green
+	orl %r15d, %eax      # OR blended_b with %eax, red, green, and blue are combined
+	orl $0x000000FF, %eax  # OR, set the alpha component to 255
+
+	addq $8, %rsp
+	popq %r15
+	popq %r14
+	popq %r13
+	popq %r12
 	ret
 
 

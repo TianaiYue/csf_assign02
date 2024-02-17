@@ -148,7 +148,7 @@ int main(int argc, char **argv) {
   TEST(test_get_g);
   TEST(test_get_b);
   TEST(test_get_a);
-  // TEST(test_blend_colors);
+  TEST(test_blend_colors);
   // TEST(test_square_dist);
 
   TEST_FINI();
