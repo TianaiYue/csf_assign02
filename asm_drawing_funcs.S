@@ -280,6 +280,8 @@ set_pixel:
  */
 	.globl square	
 square:
+	imulq %rdi, %rdi
+	movq %rdi, %rax
 	ret
 
 
@@ -292,10 +294,37 @@ square:
  *
  * Returns (in %rax):
  *   the distance between the two points as an int64_t
- */
+ */	
 	.globl square_dist
 square_dist:
+	/* save values of callee-saved registers */
+	pushq %r12
+	pushq %r13
+	subq $8, %rsp
+
+	movq %rsi, %r12		#save value of y1
+	movq %rcx, %r13		#save value of y2
+
+	/* compute x2-x1 */
+	subq %rdi, %rdx		#store x2-x1 in %rdi
+	movq %rdx, %rdi		#pass x2-x1 as first arg to square
+	call square		#compute (x1-x2)^2
+
+	/* compute y2-y1 */
+	subq %r12, %r13		#store y2-y1 in %r13
+	movq %rax, %r12		#move (x2-x1)^2 to %r12
+	movq %r13, %rdi		#pass y2-y1 as first arg to square
+	call spuare		#compute (y1-y2)^2
+
+	/* compute (x2-x1)^2 + (y2-y1)^2 */
+	addq %r12, %rax		#put sum of squares in %rax
+
+	/* restore values of callee-saved registers */
+	addq $8, %rsp
+	popq %r13
+	popq %r12
 	ret
+
 
 
 
