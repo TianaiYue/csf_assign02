@@ -122,19 +122,19 @@ get_r:
 	.globl get_g
 get_g:
 	movl %edi, %eax		# move color value to return value
-	shrl $16, %eax			# Shift the color value right by 16 bits to get the green component
+	shrl $16, %eax		# Shift the color value right by 16 bits to get the green component
 	ret
 
 	.globl get_b
 get_b:
 	movl %edi, %eax		# move color value to return value
-	shrl $8, %eax 		# Shift the color value right by 8 bits to get the green component
+	shrl $8, %eax 		# Shift the color value right by 8 bits to get the blue component
 	ret
 
 	.globl get_a
 get_a:
-	movl %edi, %eax   	    # move color value to return value
-	#shrl $8, %eax 		# Shift the color value right by 8 bits to get the green component
+	movl %edi, %eax   	# move color value to return value
+	#shrl $8, %eax 		# Shift the color value right by 8 bits to get the alpha component
 	ret
 
 
