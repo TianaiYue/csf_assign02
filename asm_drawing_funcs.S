@@ -110,23 +110,31 @@ clamp:
  * Parameters:
  *   %edi - uint32_t color value
  *
- * Returns (in %eax):
+ * Returns (in %al):
  *   the color components as uint8_t values
  */
 	.globl get_r
 get_r:
+	movl %edi, %eax		# move color value to return value
+	shrl $24, %eax		# Shift the color value right by 24 bits to get the red component
 	ret
 
 	.globl get_g
 get_g:
+	movl %edi, %eax		# move color value to return value
+	shrl $16, %eax			# Shift the color value right by 16 bits to get the green component
 	ret
 
 	.globl get_b
 get_b:
+	movl %edi, %eax		# move color value to return value
+	shrl $8, %eax 		# Shift the color value right by 8 bits to get the green component
 	ret
 
 	.globl get_a
 get_a:
+	movl %edi, %eax   	    # move color value to return value
+	#shrl $8, %eax 		# Shift the color value right by 8 bits to get the green component
 	ret
 
 
