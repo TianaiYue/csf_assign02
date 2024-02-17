@@ -135,8 +135,8 @@ get_a:
  * using a specified alpha (opacity) value.
  *
  * Parameters:
- *   %rdi - foreground color component (0-255)
- *   %rsi - background color component (0-255)
+ *   %edi - foreground color component (0-255)
+ *   %esi - background color component (0-255)
  *   %edx - The opacity value for the foreground, where 255 is fully opaque.
  *
  * Returns (in %eax):
