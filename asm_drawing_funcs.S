@@ -153,18 +153,18 @@ get_a:
 	.globl blend_components
 blend_components:
 
-    movl %edi, %eax          # move foreground to %eax for multiplication
-    imull %edx, %eax         # multiply foreground by alpha (result in %eax)
+    movl %edi, %eax		# move foreground to %eax for multiplication
+    imull %edx, %eax	# multiply foreground by alpha (result in %eax)
 
-    movl $255, %ebx          # load 255 into %ebx
-    subl %edx, %ebx          # subtract alpha from 255 (result in %ebx)
-    imull %esi, %ebx         # multiply background by (255 - alpha) (result in %ebx)
+    movl $255, %ebx		# load 255 into %ebx
+    subl %edx, %ebx		# subtract alpha from 255 (result in %ebx)
+    imull %esi, %ebx	# multiply background by (255 - alpha) (result in %ebx)
 
-    addl %ebx, %eax          # add the results of the two multiplications
+    addl %ebx, %eax		# add the results of the two multiplications
 
-    xorl %edx, %edx          # zero %edx before division to avoid overflow
-    movl $255, %ebx          # load 255 into %ebx for division
-    divl %ebx                # divide by 255 (quotient in %eax)
+    xorl %edx, %edx		# zero %edx before division to avoid overflow
+    movl $255, %ebx		# load 255 into %ebx for division
+    divl %ebx			# divide by 255 (quotient in %eax)
 
     ret                  
 
@@ -267,7 +267,45 @@ blend_colors:
  */
 	.globl set_pixel
 set_pixel:
-	ret
+	pushq %rbp
+    movq %rsp, %rbp
+    pushq %r12
+    pushq %r13
+    pushq %r14
+    pushq %r15
+
+    movq %rdi, %r12         # save img pointer in %r12
+    movl %esi, %r13d        # save index in %r13d
+    movl %edx, %r14d        # save color in %r14d
+	
+
+    /* load image width and height, assuming %rdi points to the start of the Image structure */
+    movl (%r12), %eax       # load image width
+    movl 4(%r12), %ebx      # load image height
+
+    /* calculate total pixels in the image */
+    imul %ebx, %eax         # multiply width and height to get total pixels
+
+    /* check if index is within bounds of the image data array */
+    cmpl %eax, %r13d        # compare total pixels with the index
+    jae .Lindex_out_of_bounds  # if index is out of bounds
+
+    /* assuming the pointer to the image data array is right after height */
+    movq 8(%r12), %rcx      # load address of the image data array
+
+    /* blend color if index is in bounds */
+    movl (%rcx,%r13,4), %esi    # load existing color from data array at index
+    movl %r14d, %edi            # set new color as foreground
+    call blend_colors           # blend foreground and background colors
+    movl %eax, (%rcx,%r13,4)    # store blended color back in data array
+
+.Lindex_out_of_bounds:
+    popq %r15
+    popq %r14
+    popq %r13
+    popq %r12
+    popq %rbp
+    ret
 
 /*
  * Squares an int64_t value.
@@ -302,19 +340,19 @@ square_dist:
 	pushq %r13
 	subq $8, %rsp
 
-	movq %rsi, %r12		#save value of y1
-	movq %rcx, %r13		#save value of y2
+	movq %rsi, %r12		# save value of y1
+	movq %rcx, %r13		# save value of y2
 
 	/* compute x2-x1 */
-	subq %rdi, %rdx		#store x2-x1 in %rdi
-	movq %rdx, %rdi		#pass x2-x1 as first arg to square
-	call square		#compute (x1-x2)^2
+	subq %rdi, %rdx		# store x2-x1 in %rdi
+	movq %rdx, %rdi		# pass x2-x1 as first arg to square
+	call square			# compute (x1-x2)^2
 
 	/* compute y2-y1 */
-	subq %r12, %r13		#store y2-y1 in %r13
-	movq %rax, %r12		#move (x2-x1)^2 to %r12
-	movq %r13, %rdi		#pass y2-y1 as first arg to square
-	call spuare		#compute (y1-y2)^2
+	subq %r12, %r13		# store y2-y1 in %r13
+	movq %rax, %r12		# move (x2-x1)^2 to %r12
+	movq %r13, %rdi		# pass y2-y1 as first arg to square
+	call square			# compute (y1-y2)^2
 
 	/* compute (x2-x1)^2 + (y2-y1)^2 */
 	addq %r12, %rax		#put sum of squares in %rax
@@ -344,8 +382,46 @@ square_dist:
  */
 	.globl draw_pixel
 draw_pixel:
-	/* TODO: implement */
+	pushq %rbp 
+    movq %rsp, %rbp
+    pushq %r12
+    pushq %r13
+    pushq %r14
+    pushq %r15
+
+    movq %rdi, %r12   	# move img pointer to %r12
+    movl %esi, %r13d  	# move x coordinate to %r13d
+    movl %edx, %r14d  	# move y coordinate to %r14d
+    movl %ecx, %r15d  	# move color value to %r15d
+
+    /* check if x, y are within image bounds */
+    movq %r12, %rdi   	# set img as arg1
+    movl %r13d, %esi  	# set x as arg2
+    movl %r14d, %edx  	# set y as arg3
+    call in_bounds   	# call in_bounds function
+	cmp $0, %eax        # compare the result with 0
+    jz .Lpixel_out_of_bounds   # If 0, jump to label indicating pixel is out of bounds
+
+    /* calculate pixel index in image data array */
+    movq %r12, %rdi   	# set img as arg1
+    movl %r13d, %esi  	# set x as arg2
+    movl %r14d, %edx  	# set y as arg3
+    call compute_index  # call compute_index function
+    movl %eax, %esi   	# move the index to %esi
+
+    /* set the pixel color at the calculated index */
+    movq %r12, %rdi   	# set img as arg1
+    movl %r15d, %edx  	# set color as arg
+    call set_pixel   	# call set_pixel function
+
+.Lpixel_out_of_bounds:
+    popq %r15
+    popq %r14
+    popq %r13
+    popq %r12
+    popq %rbp
     ret
+
 
 
 /*
