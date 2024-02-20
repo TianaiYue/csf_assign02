@@ -2,6 +2,15 @@
  * Assembly-language implementations of the drawing functions
  */
 
+/*
+ * Implementation of drawing and helper functions in Assembly
+ * for basic graphic operations.
+ * CSF Assignment 2
+ * Tianai Yue, Cassie Zhang
+ * tyue4@jhu.edu, xzhan304@jhu.edu
+ */
+
+
 /* Offsets of struct Image fields */
 #define IMAGE_WIDTH_OFFSET   0
 #define IMAGE_HEIGHT_OFFSET  4
