@@ -89,8 +89,8 @@ compute_index:
  * 
  * Parameters:
  *   %edi 	  - The value to be clamped
- *   %esi     - x coordinate (pixel column)
- *   %edx     - y coordinate (pixel row)
+ *   %esi     - min coordinate
+ *   %edx     - max coordinate
  *
  * Returns (in %eax):
  *   the clamped value as a int32_t
@@ -98,9 +98,16 @@ compute_index:
  */
 	.globl clamp
 clamp:
-	/* TODO: implement, not needed in MS1 */
-	ret
+    movl %edi, %eax        # move the val into eax as a default
 
+    cmpl %esi, %edi        # compare val with min
+    cmovl %esi, %eax       # if val is less than min, move min into eax
+
+    cmpl %edx, %eax        # compare current return value with max
+    cmovg %edx, %eax       # if current return value is greater than max, move max into eax
+
+    ret                    # return with eax holding the clamped value
+                
 
 /*
  * Returns the red, green, blue, and alpha components of a 
