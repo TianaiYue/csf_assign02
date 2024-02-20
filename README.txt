@@ -15,5 +15,10 @@ enhancing performance by reducing unnecessary computations.
 
 Milestone 2
 Both Cassie and Tianai did relatively equal amounts of work and effort.
-Tiana: draw_pixel, set_pixel, blend_components, 
-Cassie: in_bounds, compute_index, blend_colors, get_r/g/b/a
+Tiana: draw_pixel, set_pixel, blend_components, square, square_dist, and test cases for all the functions.
+Cassie: in_bounds, compute_index, blend_colors, get_r/g/b/a, and test cases for all the functions.
+
+The assembly code optimizes register allocation, following established conventions for parameter transmission 
+and return values. It meticulously preserves and restores registers such as `%rbp` and `%r12`-`%r15`, ensuring 
+their integrity across function invocations. It utilizes control flow directives like `jmp` and conditionals 
+(`je`, `jne`) to navigate program flow based on specific conditions, bolstering both code clarity and performance.

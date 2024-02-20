@@ -276,7 +276,7 @@ blend_colors:
 	.globl set_pixel
 set_pixel:
 	pushq %rbp              # preserve value of %rbp
-    movq %rsp, %rbp
+    movq %rsp, %rbp			# set the base pointer rbp to the current stack pointer rsp
     pushq %r12              # preserve value of %r12
     pushq %r13              # preserve value of %r13
     pushq %r14              # preserve value of %r14
@@ -391,7 +391,7 @@ square_dist:
 	.globl draw_pixel
 draw_pixel:
 	pushq %rbp          # preserve value of %rbp
-    movq %rsp, %rbp
+    movq %rsp, %rbp		# set the base pointer rbp to the current stack pointer rsp
     pushq %r12          # preserve value of %r12
     pushq %r13          # preserve value of %r13
     pushq %r14          # preserve value of %r14
