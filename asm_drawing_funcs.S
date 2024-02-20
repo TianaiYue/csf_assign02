@@ -32,31 +32,31 @@
  *   %esi     - x coordinate (pixel column)
  *   %edx     - y coordinate (pixel row)
  * 
- * Returns:
+ * Returns (in %eax):
  *   a int32_t, 1 if the coordinates are within bounds, 
  *   0 otherwise
  */
 	.globl in_bounds
 in_bounds:
-	cmp $0, %esi		/* compare 0 with x coordinate */
-	jl .LOutofBounds  	/* if x < 0, jump to the false branch */
+	cmp $0, %esi		# compare 0 with x coordinate
+	jl .LOutofBounds  	# if x < 0, jump to the false branch 
 
-	movl 0(%rdi), %ebx	/* retrieve the width of the image */
-	cmp %ebx, %esi 		/* compare width with x coordinate */
-	jge .LOutofBounds	/* if x >= width, jump to the false branch */
+	movl 0(%rdi), %r10d	# retrieve the width of the image
+	cmp %r10d, %esi 		# compare width with x coordinate
+	jge .LOutofBounds	# if x >= width, jump to the false branch
 
-	cmp $0, %edx		/* compare 0 with y coordinate */
-	jl .LOutofBounds  	/* if y < 0, jump to the false branch */
+	cmp $0, %edx		# compare 0 with y coordinate
+	jl .LOutofBounds  	# if y < 0, jump to the false branch
 
-	movl 4(%rdi), %ecx		/* retrieve the hight of the image */
-	cmp %ecx, %edx 			/* compare height with y coordinate */
-	jge .LOutofBounds		/* if y < height, jump to the false branch */
+	movl 4(%rdi), %r11d		# retrieve the hight of the image
+	cmp %r11d, %edx       # compare y coordinate with height
+	jge .LOutofBounds     # if y >= height, jump to the false branch
 
-	movl $1, %eax
+	movl $1, %eax		# set return value as one
 	ret
 
 .LOutofBounds: 
-	movl $0, %eax
+	movl $0, %eax		# set return value as zero
 	ret
 
 
@@ -76,10 +76,10 @@ in_bounds:
 	.globl compute_index
 compute_index:
 
-	movl 0(%rdi), %ebx		/* retrieve the width of the image */
-	imull %edx, %ebx		/* multiply the width by the y coordinate */
-	add %ebx, %esi		/* add the product to the x coordinate */
-	movl %esi, %eax		/* move the index into the return register */
+	movl 0(%rdi), %ebx		# retrieve the width of the image
+	imull %edx, %ebx		# multiply the width by the y coordinate
+	add %ebx, %esi			# add the product to the x coordinate
+	movl %esi, %eax			# move the index into the return register
 
 	ret
 
@@ -98,6 +98,7 @@ compute_index:
  */
 	.globl clamp
 clamp:
+	/* TODO: implement, not needed in MS1 */
 	ret
 
 
@@ -121,20 +122,20 @@ get_r:
 get_g:
 	movl %edi, %eax		# move color value to return value
 	shrl $16, %eax		# shift the color value right by 16 bits to get the green component
-	andl $0xFF, %eax	# least significant 8 bits
+	andl $0xFF, %eax	# get the least significant 8 bits
 	ret
 
 	.globl get_b
 get_b:
 	movl %edi, %eax		# move color value to return value
 	shrl $8, %eax 		# shift the color value right by 8 bits to get the blue component
-	andl $0xFF, %eax	# least significant 8 bits
+	andl $0xFF, %eax	# get the least significant 8 bits
 	ret
 
 	.globl get_a
 get_a:
 	movl %edi, %eax   	# move color value to return value
-	and $0xFF, %eax     # isolate the alpha component by ANDing with 0xFF
+	and $0xFF, %eax     # get the least significant 8 bits
 	ret
 
 
@@ -183,11 +184,11 @@ blend_components:
  */
 	.globl blend_colors
 blend_colors:
-	pushq %r12
-	pushq %r13
-	pushq %r14
-	pushq %r15
-	subq $8, %rsp
+	pushq %r12          # preserve value of %r12
+	pushq %r13          # preserve value of %r13
+	pushq %r14          # preserve value of %r14
+	pushq %r15          # preserve value of %r15
+	subq $8, %rsp       # align stack pointer 
 
 	movl %edi, %r12d 	# save fg color in r12d
 	movl %esi, %r13d	# save bg color in r13d
@@ -242,16 +243,16 @@ blend_colors:
 	shll $8, %eax		# shift right by 8 bits for the blue component
 	movl %eax, %r15d    # save in r15d
 
-	movl %r10d, %eax		# move blended_r to %eax
-	orl %r11d, %eax      # OR blended_g with %eax, red and green
-	orl %r15d, %eax      # OR blended_b with %eax, red, green, and blue are combined
+	movl %r10d, %eax	# move blended_r to %eax
+	orl %r11d, %eax     # OR blended_g with %eax, red and green
+	orl %r15d, %eax     # OR blended_b with %eax, red, green, and blue are combined
 	orl $0x000000FF, %eax  # OR, set the alpha component to 255
 
-	addq $8, %rsp
-	popq %r15
-	popq %r14
-	popq %r13
-	popq %r12
+	addq $8, %rsp      # restore stack pointer
+	popq %r15          # restore value of %r15
+	popq %r14          # restore value of %r14
+	popq %r13          # restore value of %r13
+	popq %r12          # restore value of %r12
 	ret
 
 
@@ -267,12 +268,12 @@ blend_colors:
  */
 	.globl set_pixel
 set_pixel:
-	pushq %rbp
+	pushq %rbp              # preserve value of %rbp
     movq %rsp, %rbp
-    pushq %r12
-    pushq %r13
-    pushq %r14
-    pushq %r15
+    pushq %r12              # preserve value of %r12
+    pushq %r13              # preserve value of %r13
+    pushq %r14              # preserve value of %r14
+    pushq %r15              # preserve value of %r15
 
     movq %rdi, %r12         # save img pointer in %r12
     movl %esi, %r13d        # save index in %r13d
@@ -300,11 +301,11 @@ set_pixel:
     movl %eax, (%rcx,%r13,4)    # store blended color back in data array
 
 .Lindex_out_of_bounds:
-    popq %r15
-    popq %r14
-    popq %r13
-    popq %r12
-    popq %rbp
+	popq %r15                    # restore value of %r15
+	popq %r14                    # restore value of %r14
+	popq %r13                    # restore value of %r13
+	popq %r12                    # restore value of %r12
+	popq %rbp                    # restore value of %rbp
     ret
 
 /*
@@ -336,9 +337,9 @@ square:
 	.globl square_dist
 square_dist:
 	/* save values of callee-saved registers */
-	pushq %r12
-	pushq %r13
-	subq $8, %rsp
+	pushq %r12          # preserve value of %r12
+	pushq %r13          # preserve value of %r13
+	subq $8, %rsp       # align stack pointer
 
 	movq %rsi, %r12		# save value of y1
 	movq %rcx, %r13		# save value of y2
@@ -355,12 +356,12 @@ square_dist:
 	call square			# compute (y1-y2)^2
 
 	/* compute (x2-x1)^2 + (y2-y1)^2 */
-	addq %r12, %rax		#put sum of squares in %rax
+	addq %r12, %rax		# put sum of squares in %rax
 
 	/* restore values of callee-saved registers */
-	addq $8, %rsp
-	popq %r13
-	popq %r12
+	addq $8, %rsp      # restore stack pointer
+	popq %r13          # restore value of %r13
+	popq %r12          # preserve value of %r12
 	ret
 
 
@@ -382,12 +383,12 @@ square_dist:
  */
 	.globl draw_pixel
 draw_pixel:
-	pushq %rbp 
+	pushq %rbp          # preserve value of %rbp
     movq %rsp, %rbp
-    pushq %r12
-    pushq %r13
-    pushq %r14
-    pushq %r15
+    pushq %r12          # preserve value of %r12
+    pushq %r13          # preserve value of %r13
+    pushq %r14          # preserve value of %r14
+    pushq %r15          # preserve value of %r15
 
     movq %rdi, %r12   	# move img pointer to %r12
     movl %esi, %r13d  	# move x coordinate to %r13d
@@ -415,13 +416,12 @@ draw_pixel:
     call set_pixel   	# call set_pixel function
 
 .Lpixel_out_of_bounds:
-    popq %r15
-    popq %r14
-    popq %r13
-    popq %r12
-    popq %rbp
+    popq %r15           # restore value of %r15
+	popq %r14           # restore value of %r14
+	popq %r13           # restore value of %r13
+	popq %r12           # restore value of %r12
+	popq %rbp           # restore value of %rbp
     ret
-
 
 
 /*
