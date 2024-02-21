@@ -284,19 +284,17 @@ blend_colors:
  */
 	.globl set_pixel
 set_pixel:
-	pushq %rbp              # preserve value of %rbp
-    movq %rsp, %rbp			# set the base pointer rbp to the current stack pointer rsp
     pushq %r12              # preserve value of %r12
     pushq %r13              # preserve value of %r13
     pushq %r14              # preserve value of %r14
     pushq %r15              # preserve value of %r15
+	subq $8, %rsp       # align stack pointer 
 
     movq %rdi, %r12         # save img pointer in %r12
     movl %esi, %r13d        # save index in %r13d
     movl %edx, %r14d        # save color in %r14d
-	
-
-    /* load image width and height, assuming %rdi points to the start of the Image structure */
+  
+	/* load image width and height, assuming %rdi points to the start of the Image structure */
     movl (%r12), %eax       # load image width
     movl 4(%r12), %ebx      # load image height
 
@@ -316,12 +314,12 @@ set_pixel:
     call blend_colors           # blend foreground and background colors
     movl %eax, (%rcx,%r13,4)    # store blended color back in data array
 
-.Lindex_out_of_bounds:
+.Lindex_out_of_bounds:	
+	addq $8, %rsp      			 # restore stack pointer
 	popq %r15                    # restore value of %r15
 	popq %r14                    # restore value of %r14
 	popq %r13                    # restore value of %r13
 	popq %r12                    # restore value of %r12
-	popq %rbp                    # restore value of %rbp
     ret
 
 /*
@@ -399,12 +397,12 @@ square_dist:
  */
 	.globl draw_pixel
 draw_pixel:
-	pushq %rbp          # preserve value of %rbp
-    movq %rsp, %rbp		# set the base pointer rbp to the current stack pointer rsp
+	
     pushq %r12          # preserve value of %r12
     pushq %r13          # preserve value of %r13
     pushq %r14          # preserve value of %r14
     pushq %r15          # preserve value of %r15
+	subq $8, %rsp       # align stack pointer 
 
     movq %rdi, %r12   	# move img pointer to %r12
     movl %esi, %r13d  	# move x coordinate to %r13d
@@ -432,11 +430,11 @@ draw_pixel:
     call set_pixel   	# call set_pixel function
 
 .Lpixel_out_of_bounds:
+	addq $8, %rsp      # restore stack pointer
     popq %r15           # restore value of %r15
 	popq %r14           # restore value of %r14
 	popq %r13           # restore value of %r13
 	popq %r12           # restore value of %r12
-	popq %rbp           # restore value of %rbp
     ret
 
 
