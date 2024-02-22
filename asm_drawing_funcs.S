@@ -47,18 +47,18 @@
  */
 	.globl in_bounds
 in_bounds:
-	cmp $0, %esi		# compare 0 with x coordinate
+	cmpl $0, %esi		# compare 0 with x coordinate
 	jl .LOutofBounds  	# if x < 0, jump to the false branch 
 
-	movl 0(%rdi), %r10d	# retrieve the width of the image
-	cmp %r10d, %esi 		# compare width with x coordinate
+	movl IMAGE_WIDTH_OFFSET(%rdi), %r10d	# retrieve the width of the image
+	cmpl %r10d, %esi 		# compare width with x coordinate
 	jge .LOutofBounds	# if x >= width, jump to the false branch
 
-	cmp $0, %edx		# compare 0 with y coordinate
+	cmpl $0, %edx		# compare 0 with y coordinate
 	jl .LOutofBounds  	# if y < 0, jump to the false branch
 
-	movl 4(%rdi), %r11d		# retrieve the hight of the image
-	cmp %r11d, %edx       # compare y coordinate with height
+	movl IMAGE_HEIGHT_OFFSET(%rdi), %r11d		# retrieve the hight of the image
+	cmpl %r11d, %edx       # compare y coordinate with height
 	jge .LOutofBounds     # if y >= height, jump to the false branch
 
 	movl $1, %eax		# set return value as one
@@ -85,9 +85,9 @@ in_bounds:
 	.globl compute_index
 compute_index:
 
-	movl 0(%rdi), %ebx		# retrieve the width of the image
+	movl IMAGE_WIDTH_OFFSET(%rdi), %ebx		# retrieve the width of the image
 	imull %edx, %ebx		# multiply the width by the y coordinate
-	add %ebx, %esi			# add the product to the x coordinate
+	addl %ebx, %esi			# add the product to the x coordinate
 	movl %esi, %eax			# move the index into the return register
 
 	ret
@@ -125,7 +125,7 @@ clamp:
  * Parameters:
  *   %edi - uint32_t color value
  *
- * Returns (in %al):
+ * Returns (in %eax):
  *   the color components as uint8_t values
  */
 	.globl get_r
@@ -151,7 +151,7 @@ get_b:
 	.globl get_a
 get_a:
 	movl %edi, %eax   	# move color value to return value
-	and $0xFF, %eax     # get the least significant 8 bits
+	andl $0xFF, %eax     # get the least significant 8 bits
 	ret
 
 
