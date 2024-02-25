@@ -48,23 +48,23 @@
 	.globl in_bounds
 in_bounds:
 	cmpl $0, %esi		# compare 0 with x coordinate
-	jl .LOutofBounds  	# if x < 0, jump to the false branch 
+	jl .LoutofBounds  	# if x < 0, jump to the false branch 
 
 	movl IMAGE_WIDTH_OFFSET(%rdi), %r10d	# retrieve the width of the image
 	cmpl %r10d, %esi 		# compare width with x coordinate
-	jge .LOutofBounds	# if x >= width, jump to the false branch
+	jge .LoutofBounds	# if x >= width, jump to the false branch
 
 	cmpl $0, %edx		# compare 0 with y coordinate
-	jl .LOutofBounds  	# if y < 0, jump to the false branch
+	jl .LoutofBounds  	# if y < 0, jump to the false branch
 
 	movl IMAGE_HEIGHT_OFFSET(%rdi), %r11d		# retrieve the hight of the image
 	cmpl %r11d, %edx       # compare y coordinate with height
-	jge .LOutofBounds     # if y >= height, jump to the false branch
+	jge .LoutofBounds     # if y >= height, jump to the false branch
 
 	movl $1, %eax		# set return value as one
 	ret
 
-.LOutofBounds: 
+.LoutofBounds: 
 	movl $0, %eax		# set return value as zero
 	ret
 
@@ -84,12 +84,14 @@ in_bounds:
  */
 	.globl compute_index
 compute_index:
+	pushq %rbx				# preserve value of %rbx
 
 	movl IMAGE_WIDTH_OFFSET(%rdi), %ebx		# retrieve the width of the image
 	imull %edx, %ebx		# multiply the width by the y coordinate
 	addl %ebx, %esi			# add the product to the x coordinate
 	movl %esi, %eax			# move the index into the return register
 
+	popq %rbx				# restore value of %rbx
 	ret
 
 /* 
@@ -169,6 +171,7 @@ get_a:
  */
 	.globl blend_components
 blend_components:
+	pushq %rbx			# preserve value of %rbx
 
     movl %edi, %eax		# move foreground to %eax for multiplication
     imull %edx, %eax	# multiply foreground by alpha (result in %eax)
@@ -183,6 +186,7 @@ blend_components:
     movl $255, %ebx		# load 255 into %ebx for division
     divl %ebx			# divide by 255 (quotient in %eax)
 
+	popq %rbx           # restore value of %rbx
     ret                  
 
 
@@ -204,6 +208,7 @@ blend_colors:
 	pushq %r13          # preserve value of %r13
 	pushq %r14          # preserve value of %r14
 	pushq %r15          # preserve value of %r15
+	pushq %rbx		    # preserve value of %rbx
 	subq $8, %rsp       # align stack pointer 
 
 	movl %edi, %r12d 	# save fg color in r12d
@@ -265,6 +270,7 @@ blend_colors:
 	orl $0x000000FF, %eax  # OR, set the alpha component to 255
 
 	addq $8, %rsp      # restore stack pointer
+	popq %rbx          # restore value of %rbx
 	popq %r15          # restore value of %r15
 	popq %r14          # restore value of %r14
 	popq %r13          # restore value of %r13
@@ -288,7 +294,8 @@ set_pixel:
     pushq %r13              # preserve value of %r13
     pushq %r14              # preserve value of %r14
     pushq %r15              # preserve value of %r15
-	subq $8, %rsp       # align stack pointer 
+	pushq %rbx              # preserve value of %rbx
+	subq $8, %rsp           # align stack pointer 
 
     movq %rdi, %r12         # save img pointer in %r12
     movl %esi, %r13d        # save index in %r13d
@@ -303,7 +310,7 @@ set_pixel:
 
     /* check if index is within bounds of the image data array */
     cmpl %eax, %r13d        # compare total pixels with the index
-    jae .Lindex_out_of_bounds  # if index is out of bounds
+    jae .LindexOutofBounds  # if index is out of bounds
 
     /* assuming the pointer to the image data array is right after height */
     movq 8(%r12), %rcx      # load address of the image data array
@@ -314,8 +321,9 @@ set_pixel:
     call blend_colors           # blend foreground and background colors
     movl %eax, (%rcx,%r13,4)    # store blended color back in data array
 
-.Lindex_out_of_bounds:	
+.LindexOutofBounds:	
 	addq $8, %rsp      			 # restore stack pointer
+	popq %rbx                    # restore value of %rbx
 	popq %r15                    # restore value of %r15
 	popq %r14                    # restore value of %r14
 	popq %r13                    # restore value of %r13
@@ -413,8 +421,8 @@ draw_pixel:
     movl %r13d, %esi  	# set x as arg2
     movl %r14d, %edx  	# set y as arg3
     call in_bounds   	# call in_bounds function
-	cmp $0, %eax        # compare the result with 0
-    jz .Lpixel_out_of_bounds   # If 0, jump to label indicating pixel is out of bounds
+	cmpl $0, %eax        # compare the result with 0
+    jz .LpixelOutofBounds   # If 0, jump to label indicating pixel is out of bounds
 
     /* calculate pixel index in image data array */
     movq %r12, %rdi   	# set img as arg1
@@ -428,7 +436,7 @@ draw_pixel:
     movl %r15d, %edx  	# set color as arg
     call set_pixel   	# call set_pixel function
 
-.Lpixel_out_of_bounds:
+.LpixelOutofBounds:
 	addq $8, %rsp      # restore stack pointer
     popq %r15           # restore value of %r15
 	popq %r14           # restore value of %r14
@@ -465,28 +473,89 @@ draw_rect:
  */
 	.globl draw_circle
 draw_circle:
-	@ pushq %r12          # preserve value of %r12
-    @ pushq %r13          # preserve value of %r13
-    @ pushq %r14          # preserve value of %r14
-    @ pushq %r15          # preserve value of %r15
-	@ subq $8, %rsp       # align stack pointer 
-
-	@ movl %esi, %r12d    # Move x to r12d
-    @ movl %edx, %r13d    # Move y to r13d
-    @ movl %ecx, %r14d    # Move radius to r14d
-    @ movl %r8d, %r15d    # Move color to r15d
-
-	@ # outer loop
-	@ movl %r14d, %ecx
-	@ negl %ecx           # i = -r
-	@ mov %ecx, %eax      # Save initial i value in eax for comparison
+	pushq %r12          # preserve value of %r12
+    pushq %r13          # preserve value of %r13
+    pushq %r14          # preserve value of %r14
+    pushq %r15          # preserve value of %r15
+	pushq %rbx			# preserve value of %rbx
+	pushq %rbp			# preserve value of %rbp
+	subq $8, %rsp       # align stack pointer 
 
 
-	@ addq $8, %rsp       # restore stack pointer
-	@ popq %r15           # restore value of %r15
-	@ popq %r14           # restore value of %r14
-	@ popq %r13           # restore value of %r13
-	@ popq %r12           # restore value of %r12
+    movq %rdi, %r15    # move pointer to struct Image to r15
+	movl %esi, %r12d    # move x to r12d
+    movl %edx, %r13d    # move y to r13d
+    movl %ecx, %r14d    # move radius to r14d
+
+	# outer loop
+	movl %r14d, %r10d	# move radius to r10d
+	negl %r10d          # i = -r
+	movl %r10d, %ebp    # save initial i value in ebp
+	
+.LouterLoopStart:
+	cmpl %r14d, %ebp    # compare i with r
+	jg .LouterLoopEnd   # if i > r, exit outer loop
+
+	movl %r14d, %r10d	# move radius to r10d
+	negl %r10d          # j = -r
+	movl %r10d, %ebx		# save initial j value in ebx
+
+.LinnerLoopStart:
+	cmpl %r14d, %ebx	# compare j with r
+	jg .LinnerLoopEnd   # if j > r, exit inner loop
+
+	# check if points within the bonds
+	movq %r12, %rdi  # x
+    movq %r13, %rsi  # y
+    leaq (%r12d, %ebx), %rdx  # x+j
+    leaq (%r13d, %ebp), %rcx  # y+i
+
+	call square_dist
+	movq %rax, %r10	# move squared distance into r10
+
+	movq %r14, %rdi  # move r into first parameter
+	call square      # square r
+
+    cmpq %rax, %r10  # Compare r^2 with squared distance
+    jg .LnextJ       # If squared distance > r^2, jump to next j
+
+	movq %r15, %rdi     # move pointer to Image to first parameter
+	leal (%r12d, %ebx), %esi    # actual x = x center + j
+	leal (%r13d, %ebp), %edx    # actual y = y center + i
+
+	call in_bounds
+	testl %eax, %eax    # Test the return value in %eax
+    jz .LnextJ          # If zero (false), jump to next_j to skip setting the pixel
+
+	# set pixel if in bounds
+	movq %r15, %rdi     # move pointer to Image to first parameter
+	leal (%r12d, %ebx), %esi    # actual x = x center + j
+	leal (%r13d, %ebp), %edx    # actual y = y center + i
+	call compute_index          # result is in %rax
+
+	movq %r15, %rdi             # img pointer
+    movl %eax, %esi             # Move result of compute_index (index) to %rsi
+    movl %r8d, %edx             # Move color to %edx; assuming color is in %r15d
+
+    call set_pixel              # Call set_pixel with these arguments
+
+
+.LnextJ:
+    incl %ebx                   # Increment j
+    jmp .LinnerLoopStart        # Jump back to start of inner loop
+
+.LinnerLoopEnd:
+	incl %ebp             # increment i
+	jmp .LouterLoopStart  # jump to start of outer loop
+
+.LouterLoopEnd:
+	addq $8, %rsp       # restore stack pointer
+	popq %rbp			# restore value of %rbp
+	popq %rbx			# restore value of %rbx
+	popq %r15           # restore value of %r15
+	popq %r14           # restore value of %r14
+	popq %r13           # restore value of %r13
+	popq %r12           # restore value of %r12
 	
 	ret
 
