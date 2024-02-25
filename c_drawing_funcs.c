@@ -263,7 +263,7 @@ void draw_circle(struct Image *img,
   for (int32_t i = -r; i <= r; i++) {
     for (int32_t j = -r; j <= r; j++) {
       // check if points within the bonds
-      if (i*i + j*j <= r*r) {
+      if (square(i) + square(j) <= square(r)) {
         if (in_bounds(img, x+j, y+i)) {
           set_pixel(img, compute_index(img, x+j, y+i), color);
         }
@@ -294,15 +294,21 @@ void draw_tile(struct Image *img,
   if (tile->x < 0 || tile->y < 0 || tile->x + tile->width > tilemap->width || tile->y + tile->height > tilemap->height) {
     return;
   }
-  int32_t source_y = tile->y, dest_y = y;
-    // loop through each row of the tile
-    for (int32_t i = 0; i < tile->height; ++i, ++source_y, ++dest_y) {
-        int32_t source_x = tile->x, dest_x = x;
-        // loop through each column of the tile
-        for (int32_t j = 0; j < tile->width; ++j, ++source_x, ++dest_x) {
-            // copy pixel to destination if it's in bounds
-            if (in_bounds(img, dest_x, dest_y)) {
-                img->data[compute_index(img, dest_x, dest_y)] = tilemap->data[compute_index(tilemap, source_x, source_y)];
+  // Loop through each row of the tile
+  for (int32_t offsetY = 0; offsetY < tile->height; ++offsetY) {
+        int32_t sourceY = tile->y + offsetY;
+        int32_t destY = y + offsetY;
+
+        // Loop through each column of the tile
+        for (int32_t offsetX = 0; offsetX < tile->width; ++offsetX) {
+            int32_t sourceX = tile->x + offsetX;
+            int32_t destX = x + offsetX;
+
+            // Copy pixel to destination if it's in bounds
+            if (in_bounds(img, destX, destY)) {
+                int32_t destIndex = compute_index(img, destX, destY);
+                int32_t sourceIndex = compute_index(tilemap, sourceX, sourceY);
+                img->data[destIndex] = tilemap->data[sourceIndex];
             }
         }
     }
