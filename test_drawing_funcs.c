@@ -131,8 +131,8 @@ int main(int argc, char **argv) {
   // add TEST() directives for your helper functions
   TEST(test_draw_pixel);
   // TEST(test_draw_rect);
-  // TEST(test_draw_circle);
-  // TEST(test_draw_circle_clip);
+  TEST(test_draw_circle);
+  TEST(test_draw_circle_clip);
   // TEST(test_draw_tile);
   // TEST(test_draw_sprite);
 
@@ -141,15 +141,15 @@ int main(int argc, char **argv) {
   TEST(test_blend_components);
   TEST(test_set_pixel);
   TEST(test_set_pixel_2);
-  // TEST(test_square);
+  TEST(test_square);
 
-  // TEST(test_clamp);
+  TEST(test_clamp);
   TEST(test_get_r);
   TEST(test_get_g);
   TEST(test_get_b);
   TEST(test_get_a);
   TEST(test_blend_colors);
-  // TEST(test_square_dist);
+  TEST(test_square_dist);
 
   TEST_FINI();
 }

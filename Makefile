@@ -44,7 +44,7 @@ all : $(EXES)
 c_draw : $(DRIVER_OBJS) $(COMMON_C_OBJS) $(C_OBJS)
 	$(CC) $(LDFLAGS) -o $@ $(DRIVER_OBJS) $(COMMON_C_OBJS) $(C_OBJS) -lz
 
-c_test_drawing_funcs : $(TEST_OBJS) $(C_OBJS) $(COMMON_C_OBJS)
+  : $(TEST_OBJS) $(C_OBJS) $(COMMON_C_OBJS)
 	$(CC) $(LDFLAGS) -o $@ $(TEST_OBJS) $(C_OBJS) $(COMMON_C_OBJS) -lz
 
 c_test_drawing_funcs_secret : $(SECRET_TEST_OBJS) $(C_OBJS) $(COMMON_C_OBJS)
