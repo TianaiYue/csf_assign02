@@ -397,7 +397,6 @@ square_dist:
  */
 	.globl draw_pixel
 draw_pixel:
-	
     pushq %r12          # preserve value of %r12
     pushq %r13          # preserve value of %r13
     pushq %r14          # preserve value of %r14
@@ -466,7 +465,29 @@ draw_rect:
  */
 	.globl draw_circle
 draw_circle:
-	/* TODO: implement */
+	@ pushq %r12          # preserve value of %r12
+    @ pushq %r13          # preserve value of %r13
+    @ pushq %r14          # preserve value of %r14
+    @ pushq %r15          # preserve value of %r15
+	@ subq $8, %rsp       # align stack pointer 
+
+	@ movl %esi, %r12d    # Move x to r12d
+    @ movl %edx, %r13d    # Move y to r13d
+    @ movl %ecx, %r14d    # Move radius to r14d
+    @ movl %r8d, %r15d    # Move color to r15d
+
+	@ # outer loop
+	@ movl %r14d, %ecx
+	@ negl %ecx           # i = -r
+	@ mov %ecx, %eax      # Save initial i value in eax for comparison
+
+
+	@ addq $8, %rsp       # restore stack pointer
+	@ popq %r15           # restore value of %r15
+	@ popq %r14           # restore value of %r14
+	@ popq %r13           # restore value of %r13
+	@ popq %r12           # restore value of %r12
+	
 	ret
 
 /*
