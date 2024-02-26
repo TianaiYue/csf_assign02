@@ -130,7 +130,7 @@ int main(int argc, char **argv) {
 
   // add TEST() directives for your helper functions
   TEST(test_draw_pixel);
-  // TEST(test_draw_rect);
+  TEST(test_draw_rect);
   TEST(test_draw_circle);
   TEST(test_draw_circle_clip);
   // TEST(test_draw_tile);

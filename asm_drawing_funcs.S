@@ -457,8 +457,89 @@ draw_pixel:
  */
 	.globl draw_rect
 draw_rect:
-	/* TODO: implement */
-	ret
+	pushq %rbp
+    movq %rsp, %rbp
+    pushq %r12
+    pushq %r13
+    pushq %r14
+    pushq %r15
+    subq $32, %rsp
+
+    movq %rdi, %r12  # img
+    movq %rsi, %r13  # rect
+    movl %edx, %r15d # color
+
+    # clamp x_start
+    movl RECT_X_OFFSET(%r13), %edi
+    movl $0, %esi
+    movl IMAGE_WIDTH_OFFSET(%r12), %edx
+    call clamp
+    movl %eax, %r8d
+
+    # clamp y_start
+    movl RECT_Y_OFFSET(%r13), %edi
+    movl $0, %esi
+    movl IMAGE_HEIGHT_OFFSET(%r12), %edx
+    call clamp
+    movl %eax, %r9d
+
+    # clamp x_end
+    movl RECT_X_OFFSET(%r13), %edi
+    addl RECT_WIDTH_OFFSET(%r13), %edi
+    movl $0, %esi
+    movl IMAGE_WIDTH_OFFSET(%r12), %edx
+    call clamp
+    movl %eax, %r10d
+
+    # clamp y_end
+    movl RECT_Y_OFFSET(%r13), %edi
+    addl RECT_HEIGHT_OFFSET(%r13), %edi
+    movl $0, %esi
+    movl IMAGE_HEIGHT_OFFSET(%r12), %edx
+    call clamp
+    movl %eax, %r11d
+
+    # check for empty rectangle
+    cmpl %r8d, %r10d
+    jge .Lempty_rect
+    cmpl %r9d, %r11d
+    jge .Lempty_rect
+
+    # iterate over y coordinates
+    movl %r9d, %eax  # y_start
+.Ly_loop:
+    cmpl %r11d, %eax  # compare with y_end
+    jge .Lend_y_loop
+    movl %r8d, %ecx  # x_start
+
+    # Iterate over x coordinates
+.Lx_loop:
+    cmpl %r10d, %ecx  # compare with x_end
+    jge .Lend_x_loop
+
+    # call draw_pixel
+    movq %r12, %rdi  # img
+    movl %ecx, %esi  # x
+    movl %eax, %edx  # y
+    movl %r15d, %r8d # color
+    call draw_pixel
+
+    incl %ecx
+    jmp .Lx_loop
+.Lend_x_loop:
+    incl %eax
+    jmp .Ly_loop
+.Lend_y_loop:
+
+.Lempty_rect:
+    addq $32, %rsp
+    popq %r15
+    popq %r14
+    popq %r13
+    popq %r12
+    popq %rbp
+    ret
+
 
 /*
  * Draw a circle.
