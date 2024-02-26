@@ -259,6 +259,7 @@ void draw_rect(struct Image *img,
 void draw_circle(struct Image *img,
                  int32_t x, int32_t y, int32_t r,
                  uint32_t color) {
+    int64_t squared_r = square(r);
     // loop over a square bounding box that contains the circle
     for (int32_t i = -r; i <= r; i++) {
         for (int32_t j = -r; j <= r; j++) {
@@ -266,7 +267,7 @@ void draw_circle(struct Image *img,
             int64_t dist = square_dist(x, y, x+j, y+i);
             
             // Compare the squared distance to the square of the radius
-            if (dist <= square(r)) {
+            if (dist <= squared_r) {
                 if (in_bounds(img, x+j, y+i)) {
                     set_pixel(img, compute_index(img, x+j, y+i), color);
                 }
@@ -344,18 +345,20 @@ void draw_sprite(struct Image *img,
       !in_bounds(spritemap, bottom_right_x, bottom_right_y)) {
     return;
   }
-  // loop through sprite pixels, starting at top-left corner
-  int32_t source_y = sprite->y;
-  int32_t dest_y = y;
-  // loop through each row of the sprite
-  for (int32_t i = 0; i < sprite->height; ++i, ++source_y, ++dest_y) {
-    int32_t source_x = sprite->x;
-    int32_t dest_x = x;
-    // loop through each column of the sprite
-    for (int32_t j = 0; j < sprite->width; ++j, ++source_x, ++dest_x) {
-      // draw pixel if it is in bounds and not transparent
-      if (in_bounds(spritemap, source_x, source_y) && get_a(spritemap->data[compute_index(spritemap, source_x, source_y)]) > 0) {
-        draw_pixel(img, dest_x, dest_y, spritemap->data[compute_index(spritemap, source_x, source_y)]);
+
+  for (int32_t offsetY = 0; offsetY < sprite->height; ++offsetY) {
+    int32_t sourceY = sprite->y + offsetY;
+    int32_t destY = y + offsetY;
+
+    // Loop through each column of the sprite using offset
+    for (int32_t offsetX = 0; offsetX < sprite->width; ++offsetX) {
+      int32_t sourceX = sprite->x + offsetX;
+      int32_t destX = x + offsetX;
+
+      // Draw pixel if it is in bounds and not transparent
+      uint32_t color = spritemap->data[compute_index(spritemap, sourceX, sourceY)];
+      if (in_bounds(img, destX, destY) && get_a(color) > 0) {
+        draw_pixel(img, destX, destY, color);
       }
     }
   }
