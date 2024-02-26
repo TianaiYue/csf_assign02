@@ -132,8 +132,8 @@ int main(int argc, char **argv) {
 #if 1
   TEST(test_draw_pixel_secret_1);
   TEST(test_draw_pixel_secret_2);
-  // TEST(test_draw_rect_secret_1);
-  // TEST(test_draw_rect_secret_2);
+  TEST(test_draw_rect_secret_1);
+  TEST(test_draw_rect_secret_2);
   TEST(test_draw_circle_secret_1);
   TEST(test_draw_circle_secret_2);
   // TEST(test_draw_tile_secret_1);

@@ -133,7 +133,7 @@ int main(int argc, char **argv) {
   TEST(test_draw_rect);
   TEST(test_draw_circle);
   TEST(test_draw_circle_clip);
-  // TEST(test_draw_tile);
+  TEST(test_draw_tile);
   // TEST(test_draw_sprite);
 
   TEST(test_in_bounds);
