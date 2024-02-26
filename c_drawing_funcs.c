@@ -345,18 +345,20 @@ void draw_sprite(struct Image *img,
       !in_bounds(spritemap, bottom_right_x, bottom_right_y)) {
     return;
   }
-  // loop through sprite pixels, starting at top-left corner
-  int32_t source_y = sprite->y;
-  int32_t dest_y = y;
-  // loop through each row of the sprite
-  for (int32_t i = 0; i < sprite->height; ++i, ++source_y, ++dest_y) {
-    int32_t source_x = sprite->x;
-    int32_t dest_x = x;
-    // loop through each column of the sprite
-    for (int32_t j = 0; j < sprite->width; ++j, ++source_x, ++dest_x) {
-      // draw pixel if it is in bounds and not transparent
-      if (in_bounds(spritemap, source_x, source_y) && get_a(spritemap->data[compute_index(spritemap, source_x, source_y)]) > 0) {
-        draw_pixel(img, dest_x, dest_y, spritemap->data[compute_index(spritemap, source_x, source_y)]);
+
+  for (int32_t offsetY = 0; offsetY < sprite->height; ++offsetY) {
+    int32_t sourceY = sprite->y + offsetY;
+    int32_t destY = y + offsetY;
+
+    // Loop through each column of the sprite using offset
+    for (int32_t offsetX = 0; offsetX < sprite->width; ++offsetX) {
+      int32_t sourceX = sprite->x + offsetX;
+      int32_t destX = x + offsetX;
+
+      // Draw pixel if it is in bounds and not transparent
+      uint32_t color = spritemap->data[compute_index(spritemap, sourceX, sourceY)];
+      if (in_bounds(img, destX, destY) && get_a(color) > 0) {
+        draw_pixel(img, destX, destY, color);
       }
     }
   }
