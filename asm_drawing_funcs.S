@@ -481,11 +481,14 @@ draw_circle:
 	pushq %rbp			# preserve value of %rbp
 	subq $8, %rsp       # align stack pointer 
 
-
-    movq %rdi, %r15    # move pointer to struct Image to r15
+    movq %rdi, %r15     # move pointer to struct Image to r15
 	movl %esi, %r12d    # move x to r12d
     movl %edx, %r13d    # move y to r13d
     movl %ecx, %r14d    # move radius to r14d
+
+	movq %r14, %rdi     # move r into first parameter
+	call square         # square r
+	movq %rax, (%rsp)   # store squared radius at the top of the stack
 
 	# outer loop
 	movl %r14d, %r10d	# move radius to r10d
@@ -513,10 +516,7 @@ draw_circle:
 	call square_dist
 	movq %rax, %r10	# move squared distance into r10
 
-	movq %r14, %rdi  # move r into first parameter
-	call square      # square r
-
-    cmpq %rax, %r10  # Compare r^2 with squared distance
+    cmpq (%rsp), %r10  # Compare r^2 with squared distance
     jg .LnextJ       # If squared distance > r^2, jump to next j
 
 	movq %r15, %rdi     # move pointer to Image to first parameter

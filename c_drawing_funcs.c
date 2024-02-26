@@ -259,6 +259,7 @@ void draw_rect(struct Image *img,
 void draw_circle(struct Image *img,
                  int32_t x, int32_t y, int32_t r,
                  uint32_t color) {
+    int64_t squared_r = square(r);
     // loop over a square bounding box that contains the circle
     for (int32_t i = -r; i <= r; i++) {
         for (int32_t j = -r; j <= r; j++) {
@@ -266,7 +267,7 @@ void draw_circle(struct Image *img,
             int64_t dist = square_dist(x, y, x+j, y+i);
             
             // Compare the squared distance to the square of the radius
-            if (dist <= square(r)) {
+            if (dist <= squared_r) {
                 if (in_bounds(img, x+j, y+i)) {
                     set_pixel(img, compute_index(img, x+j, y+i), color);
                 }
