@@ -463,27 +463,28 @@ draw_rect:
     pushq %r13
     pushq %r14
     pushq %r15
-    subq $8, %rsp       # Allocate space and save registers
+    pushq %rbx
+    subq $56, %rsp       # allocate space and save registers
 
     movq %rdi, %r12      # img
     movq %rsi, %r13      # rect
-    movl %edx, %r15d     # color
+    movl %edx, %r15d     # colors
 
-    # Calculate and clamp x_start
+    # calculate and clamp x_start
     movl RECT_X_OFFSET(%r13), %edi  # rect->x
     movl $0, %esi
     movl IMAGE_WIDTH_OFFSET(%r12), %edx  # img->width
     call clamp
-    movl %eax, %r8d      # x_start
+    movl %eax, %r8d       # x_start
 
-    # Calculate and clamp y_start
+    # calculate and clamp y_start
     movl RECT_Y_OFFSET(%r13), %edi  # rect->y
     movl $0, %esi
     movl IMAGE_HEIGHT_OFFSET(%r12), %edx  # img->height
     call clamp
     movl %eax, %r9d      # y_start
 
-    # Calculate and clamp x_end
+    # calculate and clamp x_end
     movl RECT_X_OFFSET(%r13), %edi
     addl RECT_WIDTH_OFFSET(%r13), %edi  # rect->x + rect->width
     movl $0, %esi
@@ -491,7 +492,7 @@ draw_rect:
     call clamp
     movl %eax, %r10d     # x_end
 
-    # Calculate and clamp y_end
+    # calculate and clamp y_end
     movl RECT_Y_OFFSET(%r13), %edi
     addl RECT_HEIGHT_OFFSET(%r13), %edi  # rect->y + rect->height
     movl $0, %esi
@@ -499,34 +500,39 @@ draw_rect:
     call clamp
     movl %eax, %r11d     # y_end
 
-    # Iterate over y coordinates
-    movl %r9d, %eax      # Start from y_start
+    # iterate over y coordinates
+    movl %r9d, %ebx      # start from y_start
 .Ly_loop:
-    cmpl %r11d, %eax     # Compare with y_end
-    jge .Lend_y_loop     # If y >= y_end, exit loop
+    cmpl %r11d, %ebx     # compare with y_end
+    jge .Lend_y_loop     # if y >= y_end, exit loop
 
-    # Iterate over x coordinates
-    movl %r8d, %ecx      # Start from x_start
+    # iterate over x coordinates
+    movl %r8d, %r14d      # start from x_start
 .Lx_loop:
-    cmpl %r10d, %ecx     # Compare with x_end
-    jge .Lend_x_loop     # If x >= x_end, exit loop
+    cmpl %r10d, %r14d     # compare with x_end
+    jge .Lend_x_loop     # if x >= x_end, exit loop
 
-    # Draw the pixel
+    # draw the pixel
     movq %r12, %rdi      # img
-    movl %ecx, %esi      # x
-    movl %eax, %edx      # y
-    movl %r15d, %r8d     # color
+    movl %r14d, %esi      # x
+    movl %ebx, %edx      # y
+    movl %r15d, %ecx     # color
+	pushq %r10
+	pushq %r11
     call draw_pixel
+	popq %r10
+	popq %r11
 
-    incl %ecx            # Increment x
+    incl %r14d            # increment x
     jmp .Lx_loop
 
 .Lend_x_loop:
-    incl %eax            # Increment y
+    incl %ebx            # increment y
     jmp .Ly_loop
 
 .Lend_y_loop:
-    addq $8, %rsp       # Restore the stack
+    addq $56, %rsp       # restore the stack
+    popq %rbx
     popq %r15
     popq %r14
     popq %r13
@@ -598,7 +604,9 @@ draw_circle:
 	leal (%r12d, %ebx), %esi    # actual x = x center + j
 	leal (%r13d, %ebp), %edx    # actual y = y center + i
 
+	pushq %r10
 	call in_bounds
+	popq %r10
 	testl %eax, %eax    # Test the return value in %eax
     jz .LnextJ          # If zero (false), jump to next_j to skip setting the pixel
 
@@ -650,86 +658,7 @@ draw_circle:
  */
 	.globl draw_tile
 draw_tile:
-	pushq %rbp
-    movq %rsp, %rbp
-    pushq %r12
-    pushq %r13
-    pushq %r14
-    pushq %r15
-    subq $32, %rsp       # Allocate space and save registers
-
-    movq %rdi, %r12      # img (destination image)
-    movl %esi, %r13d     # x (destination x-coordinate)
-    movl %edx, %r14d     # y (destination y-coordinate)
-    movq %rcx, %r15      # tilemap (source tilemap image)
-    movq %r8, %rbp       # tile (source tile rectangle)
-
-    # Calculate source and destination bounds
-    movl RECT_X_OFFSET(%rbp), %eax
-    movl RECT_Y_OFFSET(%rbp), %ebx
-    addl RECT_WIDTH_OFFSET(%rbp), %eax   # sourceXEnd = tile->x + tile->width
-    addl RECT_HEIGHT_OFFSET(%rbp), %ebx  # sourceYEnd = tile->y + tile->height
-
-    # Bounds check: if tile is outside the tilemap, return
-    cmpl IMAGE_WIDTH_OFFSET(%r15), %eax
-    jge .Lend_draw_tile
-    cmpl IMAGE_HEIGHT_OFFSET(%r15), %ebx
-    jge .Lend_draw_tile
-
-    xorl %esi, %esi       # offsetY = 0
-
-.Ltile_y_loop:
-    cmpl RECT_HEIGHT_OFFSET(%rbp), %esi  # Compare offsetY with tile->height
-    jge .Lend_draw_tile                  # End loop if offsetY >= tile->height
-
-    # Calculate sourceY and destY
-    leal (%r14d, %esi), %edi             # destY = y + offsetY
-    addl RECT_Y_OFFSET(%rbp), %esi       # sourceY = tile->y + offsetY
-
-    xorl %ecx, %ecx                      # offsetX = 0
-
-.Ltile_x_loop:
-    cmpl RECT_WIDTH_OFFSET(%rbp), %ecx   # Compare offsetX with tile->width
-    jge .Lnext_tile_row                  # End loop if offsetX >= tile->width
-
-    # Calculate sourceX and destX
-    leal (%r13d, %ecx), %edx             # destX = x + offsetX
-    addl RECT_X_OFFSET(%rbp), %ecx       # sourceX = tile->x + offsetX
-
-    # Compute sourceIndex and destIndex
-    pushq %rcx
-    movq %r15, %rdi                      # tilemap
-    movl %ecx, %esi                      # sourceX
-    movl %esi, %edx                      # sourceY
-    call compute_index                   # Compute sourceIndex
-    movl %eax, %r8d                      # Store sourceIndex
-
-    movq %r12, %rdi                      # img
-    movl %edx, %esi                      # destX
-    movl %edi, %edx                      # destY
-    call compute_index                   # Compute destIndex
-    popq %rcx
-
-    # Copy pixel from tilemap to img
-    movl (%r15, %r8d, 4), %eax            # Load pixel from tilemap.data[sourceIndex]
-    movl %eax, (%r12, %rax, 4)           # Store pixel into img.data[destIndex]
-
-    incl %ecx                            # Increment offsetX
-    jmp .Ltile_x_loop                    # Continue looping through columns
-
-.Lnext_tile_row:
-    incl %esi                            # Increment offsetY
-    jmp .Ltile_y_loop                    # Continue looping through rows
-
-.Lend_draw_tile:
-    addq $32, %rsp                       # Restore the stack
-    popq %r15
-    popq %r14
-    popq %r13
-    popq %r12
-    popq %rbp
-    ret
-
+	ret
 
 /*
  * Draw a sprite by copying all pixels in the region
