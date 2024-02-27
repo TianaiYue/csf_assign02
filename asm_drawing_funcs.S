@@ -738,9 +738,8 @@ draw_tile:
     movq %r12, %rdi                     # prepare destination image for in_bounds
     movl -36(%rbp), %esi                # pass destX as second argument
     movl -28(%rbp), %edx                # pass destY as third argument
-    call in_bounds                      # call in_bounds function
-    test %al, %al                       # test return value
-    jz .Lnext_tile_col                  # skip pixel copy if not in bounds
+    call compute_index                  # call compute_index function
+	movl %eax, %r11d                    # store destination index in r11d
 
     # copy pixel value from tilemap to img
     movq IMAGE_DATA_OFFSET(%r15), %rcx  # load address of tilemap->data
@@ -802,19 +801,19 @@ draw_sprite:
     movq %r8, %rbx              # store sprite pointer in rbx
 
     # calculate bottom_right_x and bottom_right_y, storing them on the stack
-    movl 8(%rbx), %eax          # load sprite's top-left x  
-    addl 12(%rbx), %eax         # add sprite width
+    movl RECT_X_OFFSET(%rbx), %eax         # load sprite's top-left x  
+    addl RECT_WIDTH_OFFSET(%rbx), %eax         # add sprite width
     subl $1, %eax               # adjust for bottom-right x
     movl %eax, -4(%rbp)         # store bottom-right x on stack
 
-    movl 4(%rbx), %eax          # load sprite's top-left y
-    addl 16(%rbx), %eax         # add sprite height
+    movl RECT_Y_OFFSET(%rbx), %eax          # load sprite's top-left y
+    addl RECT_HEIGHT_OFFSET(%rbx), %eax         # add sprite height
     subl $1, %eax               # adjust for bottom-right y
     movl %eax, -8(%rbp)         # store bottom-right y on stack
 
     # check if sprite is within bounds
     movq %r15, %rdi             # spritemap for in_bounds
-    movl 8(%rbx), %esi          # sprite's top-left x for in_bounds
+    movl (%rbx), %esi          # sprite's top-left x for in_bounds
     movl 4(%rbx), %edx          # sprite's top-left y for in_bounds
     call in_bounds              # check if top-left in bounds
     test %al, %al               # test in_bounds result
@@ -894,12 +893,12 @@ draw_sprite:
 .Lcol_loop_next:
     # increment offsetX and store it back on the stack
     addl $1, -20(%rbp)                  # increment offsetX
-    jmp .Ltile_col_loop                 # jump back to start of column loop for next pixel
+    jmp .Lcol_loop_start                 # jump back to start of column loop for next pixel
 
 .Lrow_loop_next:
     # increment offsetY and store it back on the stack
     addl $1, -16(%rbp)                  # increment offsetY
-    jmp .Ltile_row_loop                 # jump back to start of row loop for next row
+    jmp .Lrow_loop_start                 # jump back to start of row loop for next row
 
 .Lexit:
     addq $56, %rsp      # restore stack pointer
