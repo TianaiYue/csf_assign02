@@ -458,81 +458,78 @@ draw_pixel:
 	.globl draw_rect
 draw_rect:
     pushq %rbp
-    movq %rsp, %rbp
+ movq %rsp, %rbp
     pushq %r12
     pushq %r13
     pushq %r14
     pushq %r15
-    pushq %rbx
-    subq $56, %rsp       # allocate space and save registers
+    subq $48, %rsp             # allocate space and save registers
 
-    movq %rdi, %r12      # img
-    movq %rsi, %r13      # rect
-    movl %edx, %r15d     # colors
+    movq %rdi, %r12            # img
+    movq %rsi, %r13           # rect
+    movl %edx, %r15d           # colors
 
     # calculate and clamp x_start
-    movl RECT_X_OFFSET(%r13), %edi  # rect->x
+    movl RECT_X_OFFSET(%r13), %edi      # rect->x
     movl $0, %esi
-    movl IMAGE_WIDTH_OFFSET(%r12), %edx  # img->width
+    movl IMAGE_WIDTH_OFFSET(%r12), %edx   # img->width
     call clamp
-    movl %eax, %r8d       # x_start
+    movl %eax, -4(%rbp)               # x_start in -4(%rbp)
 
     # calculate and clamp y_start
-    movl RECT_Y_OFFSET(%r13), %edi  # rect->y
+    movl RECT_Y_OFFSET(%r13), %edi        # rect->y
     movl $0, %esi
     movl IMAGE_HEIGHT_OFFSET(%r12), %edx  # img->height
     call clamp
-    movl %eax, %r9d      # y_start
+    movl %eax, -8(%rbp)                   # y_start in -8(%rbp)
 
     # calculate and clamp x_end
-    movl RECT_X_OFFSET(%r13), %edi
-    addl RECT_WIDTH_OFFSET(%r13), %edi  # rect->x + rect->width
+    movl RECT_X_OFFSET(%r13), %edi        # rect->x
+    addl RECT_WIDTH_OFFSET(%r13), %edi    # rect->x + rect->width
     movl $0, %esi
-    movl IMAGE_WIDTH_OFFSET(%r12), %edx
+    movl IMAGE_WIDTH_OFFSET(%r12), %edx   # img->width
     call clamp
-    movl %eax, %r10d     # x_end
+    movl %eax, -12(%rbp)                  # x_end in -12(%rbp)
 
     # calculate and clamp y_end
-    movl RECT_Y_OFFSET(%r13), %edi
-    addl RECT_HEIGHT_OFFSET(%r13), %edi  # rect->y + rect->height
+    movl RECT_Y_OFFSET(%r13), %edi        # rect->y
+    addl RECT_HEIGHT_OFFSET(%r13), %edi   # rect->y + rect->height
     movl $0, %esi
-    movl IMAGE_HEIGHT_OFFSET(%r12), %edx
+    movl IMAGE_HEIGHT_OFFSET(%r12), %edx  # img->height
     call clamp
-    movl %eax, %r11d     # y_end
+    movl %eax, -16(%rbp)                  # y_end in -16(%rbp)
 
-    # iterate over y coordinates
-    movl %r9d, %ebx      # start from y_start
+    # iterate over y coordinates, start from y_start
+
 .Ly_loop:
-    cmpl %r11d, %ebx     # compare with y_end
-    jge .Lend_y_loop     # if y >= y_end, exit loop
+ movl -8(%rbp), %r10d    # move y_start to temporary
+    cmpl -16(%rbp), %r10d        # y_start compare with y_end
+    jge .Lend_y_loop             # if y >= y_end, exit loop
 
     # iterate over x coordinates
-    movl %r8d, %r14d      # start from x_start
+ movl -4(%rbp), %r10d         # move x_start to temporary
+ movl %r10d, -20(%rbp)        # start from x_start, store current -20(%rbp)
 .Lx_loop:
-    cmpl %r10d, %r14d     # compare with x_end
-    jge .Lend_x_loop     # if x >= x_end, exit loop
+ movl -12(%rbp), %r10d   # move x_current to temp
+    cmpl %r10d, -20(%rbp)        # x_current compare with x_end
+    jge .Lend_x_loop             # if x >= x_end, exit loop
 
     # draw the pixel
-    movq %r12, %rdi      # img
-    movl %r14d, %esi      # x
-    movl %ebx, %edx      # y
-    movl %r15d, %ecx     # color
-	pushq %r10
-	pushq %r11
+    movq %r12, %rdi              # img
+    movl -20(%rbp), %esi         # x
+    movl -8(%rbp), %edx          # y
+    movl %r15d, %ecx             # color
     call draw_pixel
-	popq %r10
-	popq %r11
 
-    incl %r14d            # increment x
+    incl -20(%rbp)           # increment x
     jmp .Lx_loop
 
 .Lend_x_loop:
-    incl %ebx            # increment y
+    incl -8(%rbp)            # increment y
     jmp .Ly_loop
 
 .Lend_y_loop:
-    addq $56, %rsp       # restore the stack
-    popq %rbx
+    addq $48, %rsp       # restore the stack
     popq %r15
     popq %r14
     popq %r13
