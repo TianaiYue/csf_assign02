@@ -564,10 +564,6 @@ draw_circle:
     movl %edx, %r13d    # move y to r13d
     movl %ecx, %r14d    # move radius to r14d
 
-	movq %r14, %rdi     # move r into first parameter
-	call square         # square r
-	movq %rax, (%rsp)   # store squared radius at the top of the stack
-
 	# outer loop
 	movl %r14d, %r10d	# move radius to r10d
 	negl %r10d          # i = -r
@@ -588,37 +584,34 @@ draw_circle:
 	# check if points within the bonds
 	movq %r12, %rdi  # x
     movq %r13, %rsi  # y
+
     leaq (%r12d, %ebx), %rdx  # x+j
     leaq (%r13d, %ebp), %rcx  # y+i
 
 	call square_dist
 	movq %rax, %r10	# move squared distance into r10
 
-    cmpq (%rsp), %r10  # Compare r^2 with squared distance
+	movq %r14, %rdi     # move r into first parameter
+	call square         # square r
+
+    cmpl %eax, %r10d  # Compare r^2 with squared distance
     jg .LnextJ       # If squared distance > r^2, jump to next j
 
 	movq %r15, %rdi     # move pointer to Image to first parameter
 	leal (%r12d, %ebx), %esi    # actual x = x center + j
 	leal (%r13d, %ebp), %edx    # actual y = y center + i
 
-	pushq %r10
 	call in_bounds
-	popq %r10
 	testl %eax, %eax    # Test the return value in %eax
     jz .LnextJ          # If zero (false), jump to next_j to skip setting the pixel
 
 	# set pixel if in bounds
-	movq %r15, %rdi     # move pointer to Image to first parameter
-	leal (%r12d, %ebx), %esi    # actual x = x center + j
-	leal (%r13d, %ebp), %edx    # actual y = y center + i
-	call compute_index          # result is in %rax
-
 	movq %r15, %rdi             # img pointer
-    movl %eax, %esi             # Move result of compute_index (index) to %rsi
-    movl %r8d, %edx             # Move color to %edx; assuming color is in %r15d
+    leal (%r12d, %ebx), %esi    # Move result of compute_index (index) to %rsi
+	leal (%r13d, %ebp), %edx
+    movl %r8d, %ecx             # Move color to %edx; assuming color is in %r15d
 
-    call set_pixel              # Call set_pixel with these arguments
-
+    call draw_pixel              # Call set_pixel with these arguments
 
 .LnextJ:
     incl %ebx                   # Increment j
