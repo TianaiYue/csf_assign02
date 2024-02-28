@@ -40,7 +40,7 @@
  *   %rdi     - pointer to struct Image
  *   %esi     - x coordinate (pixel column)
  *   %edx     - y coordinate (pixel row)
- * 
+ *
  * Returns (in %eax):
  *   a int32_t, 1 if the coordinates are within bounds, 
  *   0 otherwise
@@ -77,6 +77,9 @@ in_bounds:
  *   %rdi  - pointer to struct Image
  *   %esi     - x coordinate (pixel column)
  *   %edx     - y coordinate (pixel row)
+ * 
+ * Register use:
+ *   %rbx  - the width of the image
  *
  * Returns (in %eax):
  *   the index of the pixel in the image's data array as 
@@ -166,6 +169,9 @@ get_a:
  *   %esi - background color component (0-255)
  *   %edx - The opacity value for the foreground, where 255 is fully opaque.
  *
+ * Register use:
+ *   %rbx - stores intermediate calculations of the color component
+ *
  * Returns (in %eax):
  *   the blended color component as a uint32_t
  */
@@ -197,6 +203,15 @@ blend_components:
  * Parameters:
  *   %edi    - The foreground color component in RGBA format
  *   %esi    - The background color component in RGBA format
+ *
+ * Register use:
+ *   %r12d   - used to store the foreground color
+ *   %r13d   - used to store the background color
+ *   %r14d   - used to store the alpha value of the foreground color
+ *   %r10d   - used to store the blended red color component
+ *   %r11d   - used to store the blended green color component
+ *   %r15d   - used to store the blended blue color component
+ *   %ebx    - callee-saved register used in 'blend_components'
  *
  * Returns (in %eax):
  *   the blended color as a uint32_t in RGBA format
@@ -287,6 +302,13 @@ blend_colors:
  *   %rdi   - pointer to struct Image
  *   %esi - index where the pixel is set
  *   %edx - uint32_t color value
+ * 
+ * Register use:
+ *   %r12   - used to store the pointer to the Image struct
+ *   %r13d  - used to store the pixel index
+ *   %r14d  - used to store the color value
+ *   %eax   - used for loading image width and as a temporary register for calculations
+ *   %ebx   - used for loading image height
  */
 	.globl set_pixel
 set_pixel:
@@ -353,6 +375,10 @@ square:
  *   %rdi, %rsi - coordinates of the first point
  *   %rdx, %rcx - coordinates of the second point
  *
+ * Register use:
+ *   %r12   - used to store the y1 coordinate and the result of (x2-x1)^2
+ *   %r13   - used to store the y2 coordinate and the result of y2-y1
+ *
  * Returns (in %rax):
  *   the distance between the two points as an int64_t
  */	
@@ -402,6 +428,14 @@ square_dist:
  *   %esi     - x coordinate (pixel column)
  *   %edx     - y coordinate (pixel row)
  *   %ecx     - uint32_t color value
+ *
+ * Register use:
+ *   %r12     - used to store the pointer to the Image struct
+ *   %r13d    - used to store the x coordinate
+ *   %r14d    - used to store the y coordinate
+ *   %r15d    - used to store the color value
+ *   %eax     - used to store the return value from function calls
+ *
  */
 	.globl draw_pixel
 draw_pixel:
@@ -454,6 +488,21 @@ draw_pixel:
  *   %rdi     - pointer to struct Image
  *   %rsi     - pointer to struct Rect
  *   %edx     - uint32_t color value
+ *
+ * Register use:
+ *   %r12     - used to store the pointer to the Image struct
+ *   %r13     - used to store the pointer to the Rect struct
+ *   %r14     - not used in this snippet
+ *   %r15d    - used to store the color value
+ *   %r10d    - used for loop counters and temporary calculations
+ *
+ * Stack use (24 bytes):
+ *   -4(%rbp)  - clamped x_start value
+ *   -8(%rbp)  - clamped y_start value
+ *   -12(%rbp) - clamped x_end value
+ *   -16(%rbp) - clamped y_end value
+ *   -20(%rbp) - current x-coordinate for drawing
+ *
  */
     .globl draw_rect
 draw_rect:
@@ -463,7 +512,7 @@ draw_rect:
     pushq %r13                      # preserve value of %r13
     pushq %r14                      # preserve value of %r14
     pushq %r15                      # preserve value of %r15
-    subq $48, %rsp                  # align stack pointer 
+    subq $24, %rsp                  # align stack pointer 
 
     movq %rdi, %r12                 # store image pointer in r12
     movq %rsi, %r13                 # store rect pointer in r13
@@ -529,7 +578,7 @@ draw_rect:
     jmp .Ly_loop                   # jump back to the start of the y-coordinate loop
 
 .Lend_y_loop:
-    addq $48, %rsp              # restore stack pointer
+    addq $24, %rsp              # restore stack pointer
     popq %r15                   # restore value of %r15
     popq %r14                   # restore value of %r14
     popq %r13                   # restore value of %r13
@@ -548,6 +597,16 @@ draw_rect:
  *   %edx     - y coordinate of circle's center
  *   %ecx     - radius of circle
  *   %r8d     - uint32_t color value
+ *
+ * Register use:
+ *   %r12d    - used to store the x coordinate of the circle's center
+ *   %r13d    - used to store the y coordinate of the circle's center
+ *   %r14d    - used to store the radius of the circle
+ *   %r15     - used to store the pointer to the Image struct
+ *   %rbx     - used as loop counter for the x-axis
+ *   %rbp     - used as loop counter for the y-axis
+ *   %r10d    - used for intermediate calculations
+ *
  */
 	.globl draw_circle
 draw_circle:
@@ -642,6 +701,24 @@ draw_circle:
  *   %edx - y coordinate of location where tile should be copied
  *   %rcx - pointer to Image (the tilemap)
  *   %r8  - pointer to Rect (the tile)
+ *
+ * Register use:
+ *   %r12 - used to store the pointer to the destination Image
+ *   %r13d - used to store the x coordinate where the tile should be copied
+ *   %r14d - used to store the y coordinate where the tile should be copied
+ *   %r15 - used to store the pointer to the tilemap Image
+ *   %rbx - used to store the pointer to the Rect of the tile
+ *   %rbp - used as the base pointer for the stack frame
+ *   %r10d - used for temporary calculations
+ *   %r11d - used for temporary calculations
+ *
+ * Stack use (40 bytes):
+ *   -16(%rbp) - offsetY, counter for y
+ *   -20(%rbp) - offsetX, counter for x
+ *   -24(%rbp) - local variable sourceY
+ *   -28(%rbp) - local variable destY
+ *   -32(%rbp) - local variable sourceX
+ *   -36(%rbp) - local variable destX
  */
     .globl draw_tile
 draw_tile:
@@ -652,7 +729,7 @@ draw_tile:
     pushq %r14                  # preserve value of %r14
     pushq %r15                  # preserve value of %r15
     pushq %rbx                  # preserve value of %rbx
-    subq $56, %rsp              # align stack pointer 
+    subq $40, %rsp              # align stack pointer 
 
     # store function arguments in callee-saved registers
     movq %rdi, %r12             # store image pointer in r12
@@ -758,7 +835,7 @@ draw_tile:
     jmp .Ltile_row_loop                 # jump back to start of row loop for next row
 
 .Lexit_tile:
-    addq $56, %rsp      # restore stack pointer
+    addq $40, %rsp      # restore stack pointer
     popq %rbx           # restore value of %rbx
     popq %r15           # restore value of %r15
     popq %r14           # restore value of %r14
@@ -781,6 +858,28 @@ draw_tile:
  *   %edx - y coordinate of location where sprite should be copied
  *   %rcx - pointer to Image (the spritemap)
  *   %r8  - pointer to Rect (the sprite)
+ * 
+* Register use:
+ *   %r12 - used to store the pointer to the destination Image
+ *   %r13d - used to store the x coordinate where the sprite should be copied
+ *   %r14d - used to store the y coordinate where the sprite should be copied
+ *   %r15 - used to store the pointer to the spritemap Image
+ *   %rbx - used to store the pointer to the Rect of the sprite
+ *   %rbp - used as the base pointer for the stack frame
+ *   %r10d, %r11d - used for temporary calculations
+ *   %eax - used for storing return values and temporary calculations
+ *
+ * Stack use (56 bytes):
+ *   -4(%rbp)  - bottom-right x of sprite
+ *   -8(%rbp)  - bottom-right y of sprite
+ *   -16(%rbp) - offsetY
+ *   -20(%rbp) - offsetX
+ *   -24(%rbp) - sourceY
+ *   -28(%rbp) - destY
+ *   -32(%rbp) - sourceX
+ *   -36(%rbp) - destX
+ *   -40(%rbp) - sprite pixel color
+ *
  */
     .globl draw_sprite
 draw_sprite:
@@ -813,7 +912,7 @@ draw_sprite:
 
     # check if sprite is within bounds
     movq %r15, %rdi             # spritemap for in_bounds
-    movl (%rbx), %esi          # sprite's top-left x for in_bounds
+    movl (%rbx), %esi           # sprite's top-left x for in_bounds
     movl 4(%rbx), %edx          # sprite's top-left y for in_bounds
     call in_bounds              # check if top-left in bounds
     test %al, %al               # test in_bounds result
